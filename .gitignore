@@ -1,0 +1,7 @@
+node_modules
+public
+*.txt
+.idea
+dist/
+npm-debug.log
+yarn-error.log
