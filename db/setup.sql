@@ -45,12 +45,33 @@ CREATE TABLE Rounds (
 	REFERENCES Quizzes (quiz_id)
 );
 
+CREATE TABLE Jokers {
+  team_id INTEGER NOT NULL,
+  round_id INTEGER NOT NULL,
+  quiz_id INTEGER NOT NULL,
+
+	CONSTRAINT Jokers_PK
+	PRIMARY KEY
+	(team_id, quiz_id),
+
+  CONSTRAINT J_Team_FK
+  FOREIGN KEY (team_id)
+  REFERENCES Teams (team_id),
+
+  CONSTRAINT J_Round_FK
+  FOREIGN KEY (round_id)
+  REFERENCES Rounds (round_id),
+
+  CONSTRAINT J_Quiz_FK
+  FOREIGN KEY (quiz_id)
+  REFERENCES Quizzes (quiz_id)
+}
+
 CREATE TABLE Scores (
   team_id INTEGER NOT NULL,
   round_id INTEGER NOT NULL,
   quiz_id INTEGER NOT NULL,
-	score INTEGER NOT NULL,
-	joker BOOLEAN,
+	score INTEGER NOT NULL
 	state Score_state,
 
 	CONSTRAINT Scores_PK

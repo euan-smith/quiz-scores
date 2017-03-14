@@ -16,6 +16,7 @@ function makeApiSet(table, item, types){
   const keys=Object.keys(types);
   return {
     create(req,res,next){
+      console.log('create '+item);
       for(let t of keys)
         if (types[t] && !req.body[t]) req.body[t]=types[t];
       db.one('insert into '+table+'('+keys.join(', ')+')' +
@@ -28,11 +29,14 @@ function makeApiSet(table, item, types){
               data: r
             });
         })
+        .catch(function (err) {
+          return next(err);
+        });
     },
 
     getOne(req, res, next){
       var id = parseInt(req.params[item]);
-      db.one('select * from '+table+' where id = $1', id)
+      db.one('select * from '+table+' where '+item+'_id = $1', id)
         .then(function (data) {
           res.status(200)
             .json({
@@ -68,7 +72,7 @@ function makeApiSet(table, item, types){
         if (req.body[t]) sets.push(t+'=${'+t+'}');
       }
       if (!sets.length) return next(new Error('modify with no valid body'));
-      db.one('update '+table+' set '+sets.join(',')+' where id = ${id} returning *', req.body)
+      db.one('update '+table+' set '+sets.join(',')+' where '+item+'_id = ${id} returning *', req.body)
         .then(function (data) {
           res.status(200)
             .json({
@@ -85,7 +89,7 @@ function makeApiSet(table, item, types){
 
     deleteOne(req, res, next){
       var id = parseInt(req.params[item]);
-      db.none('delete from '+table+' where id = $1', id)
+      db.none('delete from '+table+' where '+item+'id = $1', id)
         .then(function () {
           res.status(200)
             .json({
