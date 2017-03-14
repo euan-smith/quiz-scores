@@ -36,16 +36,20 @@ CREATE TABLE Rounds (
 	round_title VARCHAR(100),
 	quiz_id INTEGER NOT NULL,
 	can_play_joker BOOLEAN,
+	round_order INTEGER NOT NULL,
 
 	CONSTRAINT Round_PK
 	PRIMARY KEY (round_id),
 
 	CONSTRAINT R_Quiz_FK
 	FOREIGN KEY (quiz_id)
-	REFERENCES Quizzes (quiz_id)
+	REFERENCES Quizzes (quiz_id),
+
+	CONSTRAINT R_Round_Order_UNQ
+	UNIQUE (quiz_id, round_order)
 );
 
-CREATE TABLE Jokers {
+CREATE TABLE Jokers (
   team_id INTEGER NOT NULL,
   round_id INTEGER NOT NULL,
   quiz_id INTEGER NOT NULL,
@@ -65,13 +69,13 @@ CREATE TABLE Jokers {
   CONSTRAINT J_Quiz_FK
   FOREIGN KEY (quiz_id)
   REFERENCES Quizzes (quiz_id)
-}
+);
 
 CREATE TABLE Scores (
   team_id INTEGER NOT NULL,
   round_id INTEGER NOT NULL,
   quiz_id INTEGER NOT NULL,
-	score INTEGER NOT NULL
+	score INTEGER NOT NULL,
 	state Score_state,
 
 	CONSTRAINT Scores_PK
@@ -91,10 +95,11 @@ CREATE TABLE Scores (
 	REFERENCES Quizzes (quiz_id)
 );
 
-GRANT ALL PRIVILEGES ON TABLE quizzes TO euans;
-GRANT ALL PRIVILEGES ON TABLE teams TO euans;
-GRANT ALL PRIVILEGES ON TABLE rounds TO euans;
-GRANT ALL PRIVILEGES ON TABLE scores TO euans;
+GRANT ALL PRIVILEGES ON TABLE Quizzes TO euans;
+GRANT ALL PRIVILEGES ON TABLE Teams TO euans;
+GRANT ALL PRIVILEGES ON TABLE Rounds TO euans;
+GRANT ALL PRIVILEGES ON TABLE Scores TO euans;
+GRANT ALL PRIVILEGES ON TABLE Jokers TO euans;
 GRANT USAGE, SELECT ON SEQUENCE quizzes_quiz_id_seq TO euans;
 GRANT USAGE, SELECT ON SEQUENCE teams_team_id_seq TO euans;
 GRANT USAGE, SELECT ON SEQUENCE rounds_round_id_seq TO euans;

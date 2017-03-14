@@ -31,3 +31,51 @@ exports.modifyQuiz = function(id, data){
 exports.deleteQuiz = function(id){
   return api.delete(`/quizzes/${id}`);
 };
+
+exports.getQuizRounds = function(quiz){
+  return api.get('/rounds?quiz_id='+quiz);
+};
+
+exports.getRounds = function(){
+  return api.get('/rounds');
+};
+
+exports.createQuizRound = function(quiz, order, title, joker){
+  return api.post('/rounds',{quiz_id:quiz, round_title:title, round_order:order, can_play_joker:joker});
+};
+
+exports.getRound = function(id){
+  return api.get(`/rounds/${id}`);
+};
+
+exports.modifyRound = function(id, data){
+  return api.patch(`/rounds/${id}`, data)
+};
+
+exports.deleteRound = function(id){
+  return api.delete(`/rounds/${id}`);
+};
+
+exports.getQuizTeams = function(quiz){
+  return api.get('/teams?quiz_id='+quiz);
+};
+
+exports.getTeams = function(){
+  return api.get('/teams');
+};
+
+exports.createQuizTeam = function(quiz, name){
+  return api.post('/teams',{quiz_id:quiz, team_name:name});
+};
+
+exports.getTeam = function(id){
+  return api.get(`/teams/${id}`);
+};
+
+exports.modifyTeam = function(id, data){
+  return api.patch(`/teams/${id}`, data)
+};
+
+exports.deleteTeam = function(id){
+  return api.delete(`/teams/${id}`);
+};

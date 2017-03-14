@@ -17,11 +17,11 @@ export default new Router({
       name: 'Hello',
       component: Hello
     },{
-      path: '/quizzes/:quiz/rounds/:round',
+      path: '/display/quizzes/:quiz/rounds/:round',
       name: 'Score Board',
       component: ScoreBoard
     },{
-      path: '/quizzes/:quiz/rounds',
+      path: '/display/quizzes/:quiz/rounds',
       name: 'Quiz Round',
       component: QuizRounds
     },{
@@ -29,15 +29,15 @@ export default new Router({
       name: 'Quizzes',
       component: Quizzes
     },{
-      path: '/rounds',
+      path: '/quizzes/:quiz/rounds',
       name: 'Rounds',
       component: Rounds
     },{
-      path: '/teams',
+      path: '/quizzes/:quiz/teams',
       name: 'Teams',
       component: Teams
     },{
-      path: '/scores',
+      path: '/quizzes/:quiz/rounds/:round/scores',
       name: 'Scores',
       component: Scores
     }

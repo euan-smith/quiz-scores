@@ -16,9 +16,8 @@ function makeApiSet(table, item, types){
   const keys=Object.keys(types);
   return {
     create(req,res,next){
-      console.log('create '+item);
       for(let t of keys)
-        if (types[t] && !req.body[t]) req.body[t]=types[t];
+        if (types[t] && typeof req.body[t] === "undefined") req.body[t]=types[t];
       db.one('insert into '+table+'('+keys.join(', ')+')' +
         'values('+keys.map(k=>'${'+k+'}').join(', ')+') returning *', req.body)
         .then(function(r){
@@ -51,7 +50,11 @@ function makeApiSet(table, item, types){
     },
 
     getAll(req, res, next){
-      db.any('select * from '+table)
+      let queries = Object.keys(req.query);
+      if (queries.length){
+        queries=' WHERE '+queries.map(q=>q+'=${'+q+'}').join(',')
+      } else queries='';
+      db.any('select * from '+table+queries,req.query)
         .then(function (data) {
           res.status(200)
             .json({
@@ -69,7 +72,7 @@ function makeApiSet(table, item, types){
       req.body.id = parseInt(req.params[item]);
       let sets=[];
       for (let t of keys){
-        if (req.body[t]) sets.push(t+'=${'+t+'}');
+        if (typeof req.body[t] !== "undefined") sets.push(t+'=${'+t+'}');
       }
       if (!sets.length) return next(new Error('modify with no valid body'));
       db.one('update '+table+' set '+sets.join(',')+' where '+item+'_id = ${id} returning *', req.body)
@@ -89,7 +92,7 @@ function makeApiSet(table, item, types){
 
     deleteOne(req, res, next){
       var id = parseInt(req.params[item]);
-      db.none('delete from '+table+' where '+item+'id = $1', id)
+      db.none('delete from '+table+' where '+item+'_id = $1', id)
         .then(function () {
           res.status(200)
             .json({

@@ -25,6 +25,9 @@
     font-size: 10vh;
     padding-bottom: 0.5em;
   }
+  h2{
+    padding-bottom: 1em;
+  }
   #app {
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -46,6 +49,10 @@
   .page-list{
     position: relative;
     flex: 1 1 auto;
+  }
+  .page-footer{
+    position: relative;
+    flex: 0 0 auto;
   }
   .item-line{
     position: absolute;
