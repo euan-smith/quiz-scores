@@ -3,13 +3,13 @@
     <table class="page-list">
       <tr>
         <th></th>
-        <th class="rotate" v-for="round in rounds">
+        <th class="rotate" v-for="round in roundList">
           <div><span>{{round.round_title}}</span></div>
         </th>
       </tr>
       <tr v-for="team in teams">
         <th class="left"><span>{{team.team_name}}</span></th>
-        <td v-for="round in rounds"><input
+        <td v-for="round in roundList"><input
             v-model="team.scores[round.round_id].score"
             @keyup.enter.prevent="set(round.round_id, team.team_id,team.scores[round.round_id].score )"
         ></td>
@@ -80,7 +80,7 @@
                 t.scores[r.round_id] = {round_id:r.round_id, quiz_id:this.quiz_id, team_id:t.team_id, score:""}
               }
             })
-          })
+          });
           console.log(this);
         })
       },
@@ -90,6 +90,7 @@
     },
     computed:{
       roundList(){
+        console.log(this.round_cnt);
         if (this.round_cnt===-1) return this.rounds;
         return this.rounds.slice(0,this.round_cnt);
       }

@@ -13,7 +13,7 @@ var cn = {
   host: 'localhost',
   port: 5432,
   database: 'quiz_scores',
-  user: 'euansmith'
+  user: 'quiz_master'
 };
 var db = pgp(cn);
 

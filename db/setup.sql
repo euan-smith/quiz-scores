@@ -1,5 +1,7 @@
 DROP DATABASE IF EXISTS quiz_scores;
+DROP ROLE IF EXISTS quiz_master;
 CREATE DATABASE quiz_scores;
+CREATE ROLE quiz_master LOGIN NOSUPERUSER INHERIT CREATEDB CREATEROLE;
 
 \c quiz_scores;
 
@@ -93,11 +95,11 @@ CREATE TABLE Scores (
 	REFERENCES Quizzes (quiz_id)
 );
 
-GRANT ALL PRIVILEGES ON TABLE Quizzes TO :user;
-GRANT ALL PRIVILEGES ON TABLE Teams TO :user;
-GRANT ALL PRIVILEGES ON TABLE Rounds TO :user;
-GRANT ALL PRIVILEGES ON TABLE Scores TO :user;
-GRANT ALL PRIVILEGES ON TABLE Jokers TO :user;
-GRANT USAGE, SELECT ON SEQUENCE quizzes_quiz_id_seq TO :user;
-GRANT USAGE, SELECT ON SEQUENCE teams_team_id_seq TO :user;
-GRANT USAGE, SELECT ON SEQUENCE rounds_round_id_seq TO :user;
+GRANT ALL PRIVILEGES ON TABLE Quizzes TO quiz_master;
+GRANT ALL PRIVILEGES ON TABLE Teams TO quiz_master;
+GRANT ALL PRIVILEGES ON TABLE Rounds TO quiz_master;
+GRANT ALL PRIVILEGES ON TABLE Scores TO quiz_master;
+GRANT ALL PRIVILEGES ON TABLE Jokers TO quiz_master;
+GRANT USAGE, SELECT ON SEQUENCE quizzes_quiz_id_seq TO quiz_master;
+GRANT USAGE, SELECT ON SEQUENCE teams_team_id_seq TO quiz_master;
+GRANT USAGE, SELECT ON SEQUENCE rounds_round_id_seq TO quiz_master;
