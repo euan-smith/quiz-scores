@@ -9,8 +9,13 @@ var options = {
 };
 
 var pgp = require('pg-promise')(options);
-var connectionString = 'postgres://localhost:5432/quiz_scores';
-var db = pgp(connectionString);
+var cn = {
+  host: 'localhost',
+  port: 5432,
+  database: 'quiz_scores',
+  user: 'euansmith'
+};
+var db = pgp(cn);
 
 function makeApiGroupedSet(table, item, pkeys, types){
   const keys=Object.keys(types).concat(pkeys);

@@ -3,13 +3,16 @@
     <table class="page-list">
       <tr>
         <th></th>
-        <th class="rotate" v-for="round in roundList">
+        <th class="rotate" v-for="round in rounds">
           <div><span>{{round.round_title}}</span></div>
         </th>
       </tr>
       <tr v-for="team in teams">
         <th class="left"><span>{{team.team_name}}</span></th>
-        <td v-for="round in roundList"><input></td>
+        <td v-for="round in rounds"><input
+            v-model="team.scores[round.round_id].score"
+            @keyup.enter.prevent="set(round.round_id, team.team_id,team.scores[round.round_id].score )"
+        ></td>
       </tr>
     </table>
     <div class="page-footer"><router-link :to="{name:'Round Scores', params:{quiz:quiz_id, round:round_cnt-1}}">previous</router-link>
@@ -18,17 +21,22 @@
 </template>
 
 <script>
-  import {getQuiz, getQuizRounds, getQuizTeams, getQuizJokers, getQuizScores, deleteQuizJoker, deleteQuizScore, putQuizJoker, putQuizScores} from '../qs-lib';
+  import {getQuiz, getQuizRounds, getQuizTeams, getQuizJokers, getQuizScores, deleteQuizJoker, deleteQuizScore, putQuizJoker, putQuizScore} from '../qs-lib';
   export default {
     name: 'hello',
     data () {
       return {
+        round_cnt:-1,
+        round_id:-1,
         quiz_id: -1,
         round_order: -1,
         quiz: {},
         rounds: [],
         teams: [],
-        scores: []
+        scores: [],
+        roundsi:{},
+        teamsi:{},
+        roundScores:[]
       }
     },
     created(){
@@ -51,22 +59,33 @@
           return getQuizRounds(this.quiz_id);
         }).then(r=> {
           this.rounds = r.data.data.sort((a, b)=>a.round_order - b.round_order);
+          let cnt=0;
+          this.roundsi = this.rounds.reduce((i,r)=>{i[r.round_id]=r;i.idx=cnt++;return i},{});
+          if (this.round_cnt<0)this.round_cnt=0;
+          if (this.round_cnt>=this.rounds.length)this.round_cnt=this.rounds.length-1;
+          this.round_id = this.rounds[this.round_cnt];
           return getQuizTeams(this.quiz_id);
         }).then(r=> {
-          this.teams = r.data.data.sort((a, b)=>a.team_id - b.team_id);
+          this.teams = r.data.data.sort((a, b)=>a.team_id - b.team_id).map(t=>{t.scores={};return t});
+          this.teamsi = this.teams.reduce((i,r)=>{i[r.team_id]=i; return i},{});
+          return getQuizScores(this.quiz_id);
         }).then(r=>{
-
+          this.scores=r.data.data;
+          this.scores.forEach(s=>{
+            this.teamsi[s.team_id].scores[s.round_id]=s;
+          });
+          this.teams.forEach(t=>{
+            this.rounds.forEach(r=>{
+              if (typeof t.scores[r.round_id] === "undefined"){
+                t.scores[r.round_id] = {round_id:r.round_id, quiz_id:this.quiz_id, team_id:t.team_id, score:""}
+              }
+            })
+          })
+          console.log(this);
         })
       },
-      add(){
-        return createQuizRound(this.quiz_id, this.newOrder, this.newTitle, this.canPlayJoker).then(()=>this.update())
-      },
-      remove(id){
-        return deleteRound(id).then(()=>this.update())
-      },
-      modify(id){
-        const r = this.rounds.find(r=>r.round_id === id);
-        return modifyRound(r.round_id, r).then(()=>this.update());
+      set(round_id, team_id){
+        return putQuizScore(this.quiz_id,round_id,team_id,score).then(()=>this.update());
       }
     },
     computed:{
