@@ -9,7 +9,7 @@
       </tr>
       <tr v-for="team in teams">
         <th class="left"><span>{{team.team_name}}</span></th>
-        <td v-for="round in roundList"><input></td>
+        <td v-for="round in roundList"><input v-model="team.scores[round.round_id].score"></td>
       </tr>
     </table>
     <div class="page-footer"><router-link :to="{name:'Round Scores', params:{quiz:quiz_id, round:round_cnt-1}}">previous</router-link>
@@ -23,12 +23,17 @@
     name: 'hello',
     data () {
       return {
+        round_cnt:-1,
+        round_id:-1,
         quiz_id: -1,
         round_order: -1,
         quiz: {},
         rounds: [],
         teams: [],
-        scores: []
+        scores: [],
+        roundsi:{},
+        teamsi:{},
+        roundScores:[]
       }
     },
     created(){
@@ -51,11 +56,28 @@
           return getQuizRounds(this.quiz_id);
         }).then(r=> {
           this.rounds = r.data.data.sort((a, b)=>a.round_order - b.round_order);
+          let cnt=0;
+          this.roundsi = this.rounds.reduce((i,r)=>{i[r.round_id]=round_id;i.idx=cnt++;return i},{});
+          if (this.round_cnt<0)this.round_cnt=0;
+          if (this.round_cnt>=this.rounds.length)this.round_cnt=this.rounds.length-1;
+          this.round_id = this.rounds[this.round_cnt];
           return getQuizTeams(this.quiz_id);
         }).then(r=> {
-          this.teams = r.data.data.sort((a, b)=>a.team_id - b.team_id);
+          this.teams = r.data.data.sort((a, b)=>a.team_id - b.team_id).map(t=>{t.scores={};return t});
+          this.teamsi = this.teams.reduce((i,r)=>{i[r.team_id]=team_id; return i},{});
+          return getQuizScores(this.quiz_id);
         }).then(r=>{
-
+          this.scores=r.data.data;
+          this.scores.forEach(s=>{
+            this.teamsi[s.team_id].scores[s.round_id]=s;
+          });
+          this.teams.forEach(t=>{
+            this.rounds.forEach(r=>{
+              if (typeof t.scores[r.round_id] === "undefined"){
+                t.scores[r.round_id] = {round_id:r.round_id, quiz_id:this.quiz_id, team_id:t.team_id, score:""}
+              }
+            })
+          })
         })
       },
       add(){
