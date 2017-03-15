@@ -37,8 +37,12 @@ export default new Router({
       name: 'Teams',
       component: Teams
     },{
-      path: '/quizzes/:quiz/rounds/:round/scores',
+      path: '/quizzes/:quiz/scores',
       name: 'Scores',
+      component: Scores
+    },{
+      path: '/quizzes/:quiz/rounds/:round/scores',
+      name: 'Round Scores',
       component: Scores
     }
   ]

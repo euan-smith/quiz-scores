@@ -26,12 +26,29 @@ makeTableApi('/api/v1','Quizzes','quiz',{quiz_title:undefined, quiz_description:
 makeTableApi('/api/v1','Teams','team',{team_name:undefined, quiz_id:-1});
 makeTableApi('/api/v1','Rounds','round',{round_title:undefined, can_play_joker:true, quiz_id:-1, round_order:-1});
 
-// app.use(function(req, res, next) {
-//   console.log(req.url+" not found");
-//   var err = new Error('Not Found');
-//   err.status = 404;
-//   next(err);
-// });
+function makeGroupApi(root, table, item, pkeys, types){
+  const set = api.makeApiGroupedSet(table,item, pkeys, types);
+  const tablePath = `${root}/${table}`.toLowerCase();
+  app.get(tablePath,set.getAll);
+  app.put(tablePath,set.putOne);
+  app.delete(tablePath,set.deleteAll);
+}
+
+makeGroupApi('/api/v1','Scores','score',['team_id','round_id','quiz_id'],{score:0});
+makeGroupApi('/api/v1','Jokers','joker',['team_id','quiz_id'],{round_id:-1});
+
+//for scores or jokers
+// GET /scores?queries
+// PUT /scores {}
+// DELETE /scores?queries
+
+
+app.use(function(req, res, next) {
+  console.log(req.url+" not found");
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
 
 // error handler
 app.use(function(err, req, res, next) {

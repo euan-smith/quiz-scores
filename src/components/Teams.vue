@@ -50,7 +50,6 @@
           return getQuizTeams(this.quiz_id);
         }).then(r=>{
           this.teams = r.data.data.sort((a,b)=>a.team_id-b.team_id);
-          console.log(this.teams);
         })
       },
       add(){return createQuizTeam(this.quiz_id, this.newName).then(()=>this.update())},

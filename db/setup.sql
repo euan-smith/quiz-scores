@@ -3,8 +3,6 @@ CREATE DATABASE quiz_scores;
 
 \c quiz_scores;
 
-CREATE TYPE Score_state as ENUM ('future', 'staged', 'applied', 'past');
-
 CREATE TABLE Quizzes (
 	quiz_id SERIAL NOT NULL,
 	quiz_title VARCHAR(100) NOT NULL,
@@ -76,7 +74,7 @@ CREATE TABLE Scores (
   round_id INTEGER NOT NULL,
   quiz_id INTEGER NOT NULL,
 	score INTEGER NOT NULL,
-	state Score_state,
+	applied BOOLEAN,
 
 	CONSTRAINT Scores_PK
 	PRIMARY KEY

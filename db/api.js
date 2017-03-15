@@ -12,6 +12,77 @@ var pgp = require('pg-promise')(options);
 var connectionString = 'postgres://localhost:5432/quiz_scores';
 var db = pgp(connectionString);
 
+function makeApiGroupedSet(table, item, pkeys, types){
+  const keys=Object.keys(types).concat(pkeys);
+  const eqMap=k=>k+'=${'+k+'}';
+  const eqKeys = pkeys.map(eqMap).join(',');
+  const params = keys.map(k=>'${'+k+'}').join(',');
+  const upsert = 'IF NOT EXISTS (SELECT * FROM '+table+' WHERE '+eqKeys +')'+
+    ' INSERT INTO '+table+'('+keys.join(',')+')' +
+    ' VALUES('+params+') RETURNING *' +
+    ' ELSE' +
+    ' UPDATE '+table+
+    ' SET ' + keys.map(eqMap).join(',')+
+    ' WHERE '+eqKeys +
+    ' RETURNING *';
+
+  return {
+    putOne(req, res, next){
+      for(let t of keys)
+        if (types[t] && typeof req.body[t] === "undefined") req.body[t]=types[t];
+      db.one(upsert, req.body)
+        .then(function (data) {
+          res.status(200)
+            .json({
+              status: 'success',
+              data: data,
+              message: 'Put ONE '+item
+            });
+        })
+        .catch(function (err) {
+          return next(err);
+        });
+    },
+
+    getAll(req, res, next){
+      let queries = Object.keys(req.query);
+      if (queries.length){
+        queries=' WHERE '+queries.map(q=>q+'=${'+q+'}').join(',')
+      } else queries='';
+      db.any('select * from '+table+queries,req.query)
+        .then(function (data) {
+          res.status(200)
+            .json({
+              status: 'success',
+              data: data,
+              message: 'Retrieved ALL '+table
+            });
+        })
+        .catch(function (err) {
+          return next(err);
+        });
+    },
+
+    deleteAll(req, res, next){
+      let queries = Object.keys(req.query);
+      if (queries.length){
+        queries=' WHERE '+queries.map(q=>q+'=${'+q+'}').join(',')
+      } else queries='';
+      db.none('delete from '+table+queries,req.query)
+        .then(function () {
+          res.status(200)
+            .json({
+              status: 'success',
+              message: 'Deleted selected '+table
+            });
+        })
+        .catch(function (err) {
+          return next(err);
+        });
+    }
+  }
+}
+
 function makeApiSet(table, item, types){
   const keys=Object.keys(types);
   return {
@@ -108,5 +179,6 @@ function makeApiSet(table, item, types){
 }
 
 module.exports={
-  makeApiSet
+  makeApiSet,
+  makeApiGroupedSet
 };
