@@ -79,3 +79,27 @@ exports.modifyTeam = function(id, data){
 exports.deleteTeam = function(id){
   return api.delete(`/teams/${id}`);
 };
+
+exports.getQuizScores = function(quiz){
+  return api.get('/scores?quiz_id='+quiz);
+};
+
+exports.getQuizJokers = function(quiz){
+  return api.get('/jokers?quiz_id='+quiz);
+};
+
+exports.deleteQuizScore = function(quiz, round, team){
+  return api.delete(`/scores?quiz_id=${quiz}&round_id=${round}&team_id=${team}`)
+};
+
+exports.deleteQuizJoker = function(quiz, team){
+  return api.delete(`/scores?quiz_id=${quiz}&team_id=${team}`)
+};
+
+exports.putQuizScores = function(quiz_id, round_id, team_id, score){
+  return api.put('/scores',{quiz_id, round_id, team_id, score})
+};
+
+exports.putQuizJoker = function(quiz_id, round_id, team_id){
+  return api.put('/scores',{quiz_id, round_id, team_id})
+};

@@ -18,7 +18,7 @@
 </template>
 
 <script>
-  import {getQuiz, getQuizRounds, getQuizTeams} from '../qs-lib';
+  import {getQuiz, getQuizRounds, getQuizTeams, getQuizJokers, getQuizScores, deleteQuizJoker, deleteQuizScore, putQuizJoker, putQuizScores} from '../qs-lib';
   export default {
     name: 'hello',
     data () {
@@ -54,6 +54,8 @@
           return getQuizTeams(this.quiz_id);
         }).then(r=> {
           this.teams = r.data.data.sort((a, b)=>a.team_id - b.team_id);
+        }).then(r=>{
+
         })
       },
       add(){
