@@ -96,7 +96,7 @@ exports.deleteQuizJoker = function(quiz, team){
   return api.delete(`/scores?quiz_id=${quiz}&team_id=${team}`)
 };
 
-exports.putQuizScores = function(quiz_id, round_id, team_id, score){
+exports.putQuizScore = function(quiz_id, round_id, team_id, score){
   return api.put('/scores',{quiz_id, round_id, team_id, score})
 };
 
