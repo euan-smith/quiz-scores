@@ -1,22 +1,37 @@
 <template>
   <div class="page">
-    <table class="page-list">
+    <div class="page-list">
+    <table>
       <tr>
         <th></th>
         <th class="rotate" v-for="round in roundList">
           <div><span>{{round.round_title}}</span></div>
         </th>
+        <th class="rotate">
+          <div><span>{{roundsi[round_id]&&roundsi[round_id].round_title}}</span></div>
+        </th>
+        <th></th>
+        <th  class="rotate"><div><span>TOTAL</span></div></th>
       </tr>
       <tr v-for="team in teams">
-        <th class="left"><span>{{team.team_name}}</span></th>
-        <td v-for="round in roundList"><input
-            v-model="team.scores[round.round_id].score"
-            @keyup.enter.prevent="set(round.round_id, team.team_id,team.scores[round.round_id].score )"
-        ></td>
+        <th class="left"><div>{{team.team_name}}</div></th>
+        <td v-for="round in roundList"><div class="score" :class="{joker: round.round_id===team.joker_round}">{{team.scores[round.round_id].score}}</div></td>
+        <td><input class="score" :class="{joker: round_id===team.joker_round}" v-model="team.score.score" @blur.prevent="set(round_id,team.team_id)"></td>
+        <td>
+          <button class="joker" v-if="typeof team.joker_round === 'undefined'" @click.prevent="setJoker(round_id, team.team_id)">Play Joker</button>
+          <button class="no-joker" v-if="round_id === team.joker_round"  @click.prevent="clearJoker(team.team_id)">Clear Joker</button>
+        </td>
+        <td class="total">{{team.total}}</td>
       </tr>
+
     </table>
-    <div class="page-footer"><router-link :to="{name:'Round Scores', params:{quiz:quiz_id, round:round_cnt-1}}">previous</router-link>
-      <router-link :to="{name:'Round Scores', params:{quiz:quiz_id, round:round_cnt+1}}">next</router-link></div>
+    </div>
+    <div class="page-footer">
+      <router-link class="nav" :class="{hidden: round_cnt<=0}" :to="{name:'Round Scores', params:{quiz:quiz_id, round:round_cnt}}">previous</router-link>
+      <router-link class="nav" :class="{hidden: round_cnt>=rounds.length}" :to="{name:'Round Scores', params:{quiz:quiz_id, round:round_cnt+2}}">next</router-link>
+      <router-link class="nav" :to="{name:'Rounds', params:{quiz:quiz_id}}">rounds</router-link>
+      <router-link class="nav" :to="{name:'Teams', params:{quiz:quiz_id}}">teams</router-link>
+    </div>
   </div>
 </template>
 
@@ -26,7 +41,7 @@
     name: 'hello',
     data () {
       return {
-        round_cnt:-1,
+        round_cnt:0,
         round_id:-1,
         quiz_id: -1,
         round_order: -1,
@@ -43,54 +58,91 @@
       this.update();
     },
     watch:{
-      "$route"(from,to){
+      "$route"(){
         this.update();
       }
     },
     methods: {
       update(){
         this.quiz_id = parseInt(this.$route.params.quiz);
-        if (this.$route.params.round){
-          this.round_cnt = parseInt(this.$route.params.round);
-        }
-        getQuiz(this.quiz_id).then(r=> {
-          this.quiz = r.data.data;
-          this.quiz.quiz_date = (new Date(this.quiz.quiz_date)).toDateString();
-          return getQuizRounds(this.quiz_id);
-        }).then(r=> {
-          this.rounds = r.data.data.sort((a, b)=>a.round_order - b.round_order);
-          let cnt=0;
-          this.roundsi = this.rounds.reduce((i,r)=>{i[r.round_id]=r;i.idx=cnt++;return i},{});
-          if (this.round_cnt<0)this.round_cnt=0;
-          if (this.round_cnt>=this.rounds.length)this.round_cnt=this.rounds.length-1;
-          this.round_id = this.rounds[this.round_cnt];
-          return getQuizTeams(this.quiz_id);
-        }).then(r=> {
-          this.teams = r.data.data.sort((a, b)=>a.team_id - b.team_id).map(t=>{t.scores={};return t});
-          this.teamsi = this.teams.reduce((i,r)=>{i[r.team_id]=i; return i},{});
-          return getQuizScores(this.quiz_id);
-        }).then(r=>{
-          this.scores=r.data.data;
-          this.scores.forEach(s=>{
-            this.teamsi[s.team_id].scores[s.round_id]=s;
+        Promise.all([
+          getQuiz(this.quiz_id),
+          getQuizRounds(this.quiz_id),
+          getQuizTeams(this.quiz_id),
+          getQuizScores(this.quiz_id),
+          getQuizJokers(this.quiz_id)
+        ]).then(([
+          {data:{data:quiz}},
+          {data:{data:rounds}},
+          {data:{data:teams}},
+          {data:{data:scores}},
+          {data:{data:jokers}}
+        ])=> {
+          if (this.$route.params.round) {
+            this.round_cnt = parseInt(this.$route.params.round)-1;
+            if (this.round_cnt<0)this.round_cnt=0;
+            this.round_id = rounds[this.round_cnt].round_id;
+          }
+
+          quiz.quiz_date = (new Date(quiz.quiz_date)).toDateString();
+          this.quiz = quiz;
+
+          this.rounds = rounds.sort((a, b)=>a.round_order - b.round_order);
+          let cnt = 0;
+          this.roundsi = rounds.reduce((i, r)=> {
+            i[r.round_id] = r;
+            i.idx = cnt++;
+            return i
+          }, {});
+//          if (this.round_cnt < 0)this.round_cnt = 0;
+//          if (this.round_cnt >= this.rounds.length)this.round_cnt = this.rounds.length - 1;
+
+          this.teams = teams.sort((a, b)=>a.team_id - b.team_id).map(t=> {
+            t.scores = {};
+            t.total=0;
+            return t
           });
-          this.teams.forEach(t=>{
-            this.rounds.forEach(r=>{
-              if (typeof t.scores[r.round_id] === "undefined"){
-                t.scores[r.round_id] = {round_id:r.round_id, quiz_id:this.quiz_id, team_id:t.team_id, score:""}
+          this.teamsi = teams.reduce((i, r)=> {
+            i[r.team_id] = r;
+            return i
+          }, {});
+
+          jokers.forEach(j=>{
+            this.teamsi[j.team_id].joker_round=j.round_id;
+          });
+
+          this.scores = scores;
+          scores.forEach(s=> {
+            const t=this.teamsi[s.team_id];
+            t.scores[s.round_id] = s;
+            t.total+=s.score*(t.joker_round===s.round_id?2:1);
+          });
+
+          teams.forEach(t=> {
+            rounds.forEach(r=> {
+              if (typeof t.scores[r.round_id] === "undefined") {
+                t.scores[r.round_id] = {round_id: r.round_id, quiz_id: this.quiz_id, team_id: t.team_id, score: ""}
               }
-            })
+            });
+
+            t.score = t.scores[this.round_id];
           });
-          console.log(this);
-        })
+        });
       },
       set(round_id, team_id){
-        return putQuizScore(this.quiz_id,round_id,team_id,score).then(()=>this.update());
+        const score = parseInt(this.teamsi[team_id].score.score);
+        if (isNaN(score))return deleteQuizScore(this.quiz_id,round_id,team_id).then(()=>this.update());
+        return putQuizScore(this.quiz_id,round_id,team_id,parseInt(score)).then(()=>this.update());
+      },
+      setJoker(round_id, team_id){
+        return putQuizJoker(this.quiz_id, round_id, team_id).then(()=>this.update());
+      },
+      clearJoker(team_id){
+        return deleteQuizJoker(this.quiz_id, team_id).then(()=>this.update());
       }
     },
     computed:{
       roundList(){
-        console.log(this.round_cnt);
         if (this.round_cnt===-1) return this.rounds;
         return this.rounds.slice(0,this.round_cnt);
       }
@@ -103,12 +155,12 @@
 <style scoped>
   th.rotate {
     /* Something you can count on */
-    height: 140px;
+    height: 100px;
     white-space: nowrap;
   }
 
   th.rotate > div {
-    transform: translate(25px, 51px) rotate(315deg);
+    transform: translate(23px, 33px) rotate(315deg);
     width: 30px;
   }
 
@@ -129,5 +181,58 @@
 
   td > input {
     width: 3em;
+  }
+
+  .score{
+    position:relative;
+    background: white;
+    padding:2px;
+    margin: 2px;
+    border:1px solid white;
+    box-shadow: 0 0 1px 1px rgba(0,0,0,0.2);
+    width: 30px;
+    height: 18px;
+    font-size: 16px;
+  }
+  div.score{
+    background: #f0f0f0;
+  }
+  div.joker, input.joker{
+    border:1px solid red;
+  }
+  button.joker{
+    height: 18px;
+    width: 80px;
+    background: #fdd;
+  }
+  button.no-joker{
+    height: 18px;
+    width: 80px;
+    background: #dfd;
+  }
+
+  .total{
+    padding-left:1em;
+    font-weight: bold;
+  }
+  div.page-list{
+    overflow:auto;
+  }
+  .page-footer{
+    padding: 10px;
+    height:25px;
+  }
+  .nav{
+    font-size:20px;
+    font-weight:bold;
+    padding:5px 10px;
+    margin:8px;
+    background:#223366;
+    color:white;
+    box-shadow: -2px 3px 18px 2px rgba(0,0,0,0.2);
+  }
+  .hidden{
+    opacity:0;
+    pointer-events: none;
   }
 </style>

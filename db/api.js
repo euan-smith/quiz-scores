@@ -19,34 +19,28 @@ var db = pgp(cn);
 
 function makeApiGroupedSet(table, item, pkeys, types){
   const keys=Object.keys(types).concat(pkeys);
-  const eqMap=k=>k+'=${'+k+'}';
-  const eqKeys = pkeys.map(eqMap).join(',');
-  const params = keys.map(k=>'${'+k+'}').join(',');
-  const upsert = 'IF NOT EXISTS (SELECT * FROM '+table+' WHERE '+eqKeys +')'+
-    ' INSERT INTO '+table+'('+keys.join(',')+')' +
-    ' VALUES('+params+') RETURNING *' +
-    ' ELSE' +
-    ' UPDATE '+table+
-    ' SET ' + keys.map(eqMap).join(',')+
-    ' WHERE '+eqKeys +
-    ' RETURNING *';
 
   return {
-    putOne(req, res, next){
-      for(let t of keys)
-        if (types[t] && typeof req.body[t] === "undefined") req.body[t]=types[t];
-      db.one(upsert, req.body)
-        .then(function (data) {
+    putOne(req,res,next){
+      let queries = pkeys.map(k=>k+'=${'+k+'}').join(' AND ');
+      db.none('delete from '+table+' where '+queries,req.body)
+        .then(function(){
+          console.log('deleted');
+          return db.one('insert into '+table+'('+keys.join(', ')+')' +
+            'values('+keys.map(k=>'${'+k+'}').join(', ')+') returning *', req.body)
+        })
+        .then(function (r) {
           res.status(200)
             .json({
               status: 'success',
-              data: data,
-              message: 'Put ONE '+item
+              data:r,
+              message: 'Put selected '+item
             });
         })
         .catch(function (err) {
           return next(err);
         });
+
     },
 
     getAll(req, res, next){
@@ -71,9 +65,9 @@ function makeApiGroupedSet(table, item, pkeys, types){
     deleteAll(req, res, next){
       let queries = Object.keys(req.query);
       if (queries.length){
-        queries=' WHERE '+queries.map(q=>q+'=${'+q+'}').join(',')
+        queries=' WHERE '+queries.map(q=>q+'=${'+q+'}').join(' AND ')
       } else queries='';
-      db.none('delete from '+table+queries,req.query)
+      db.none('DELETE FROM '+table+queries,req.query)
         .then(function () {
           res.status(200)
             .json({
