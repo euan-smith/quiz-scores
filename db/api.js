@@ -25,7 +25,6 @@ function makeApiGroupedSet(table, item, pkeys, types){
       let queries = pkeys.map(k=>k+'=${'+k+'}').join(' AND ');
       db.none('delete from '+table+' where '+queries,req.body)
         .then(function(){
-          console.log('deleted');
           return db.one('insert into '+table+'('+keys.join(', ')+')' +
             'values('+keys.map(k=>'${'+k+'}').join(', ')+') returning *', req.body)
         })
