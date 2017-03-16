@@ -8,7 +8,6 @@ var app = express();
 app.use(require('cors')());
 
 app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'dist')));
 
 function makeTableApi(root, table, item, types){
@@ -37,10 +36,20 @@ function makeGroupApi(root, table, item, pkeys, types){
 makeGroupApi('/api/v1','Scores','score',['team_id','round_id','quiz_id'],{score:0});
 makeGroupApi('/api/v1','Jokers','joker',['team_id','quiz_id'],{round_id:-1});
 
-//for scores or jokers
-// GET /scores?queries
-// PUT /scores {}
-// DELETE /scores?queries
+
+const messages=[];
+app.post('/api/v1/messages/enqueue', function(req,res,next){
+  messages.push(req.body);
+  res.send('OK');
+});
+
+app.get('/api/v1/messages', function(req,res,next){
+  res.send(messages);
+});
+
+app.post('/api/v1/messages/dequeue', function(req,res,next){
+  res.send(messages.splice(0,1));
+});
 
 
 app.use(function(req, res, next) {
