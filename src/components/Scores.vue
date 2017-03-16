@@ -13,13 +13,13 @@
         <th></th>
         <th  class="rotate"><div><span>TOTAL</span></div></th>
       </tr>
-      <tr v-for="team in teams">
+      <tr v-for="(team, idx) in teams">
         <th class="left"><div>{{team.team_name}}</div></th>
         <td v-for="round in roundList"><div class="score" :class="{joker: round.round_id===team.joker_round}">{{team.scores[round.round_id].score}}</div></td>
-        <td><input class="score" :class="{joker: round_id===team.joker_round}" v-model="team.score.score" @blur.prevent="set(round_id,team.team_id)"></td>
+        <td><input class="score" :class="{joker: round_id===team.joker_round}" v-model="team.score.score" @blur.prevent="set(round_id,team.team_id)" :tabindex="idx+10"></td>
         <td>
-          <button class="joker" v-if="typeof team.joker_round === 'undefined'" @click.prevent="setJoker(round_id, team.team_id)">Play Joker</button>
-          <button class="no-joker" v-if="round_id === team.joker_round"  @click.prevent="clearJoker(team.team_id)">Clear Joker</button>
+          <button class="joker" v-if="typeof team.joker_round === 'undefined'" @click.prevent="setJoker(round_id, team.team_id)" :tabindex="idx+100">Play Joker</button>
+          <button class="no-joker" v-if="round_id === team.joker_round"  @click.prevent="clearJoker(team.team_id)" :tabindex="idx+100">Clear Joker</button>
         </td>
         <td class="total">{{team.total}}</td>
       </tr>
@@ -28,7 +28,7 @@
     </div>
     <div class="page-footer">
       <router-link class="nav" :class="{hidden: round_cnt<=0}" :to="{name:'Round Scores', params:{quiz:quiz_id, round:round_cnt}}">previous</router-link>
-      <router-link class="nav" :class="{hidden: round_cnt>=rounds.length}" :to="{name:'Round Scores', params:{quiz:quiz_id, round:round_cnt+2}}">next</router-link>
+      <router-link class="nav" :class="{hidden: round_cnt>=rounds.length-1}" :to="{name:'Round Scores', params:{quiz:quiz_id, round:round_cnt+2}}">next</router-link>
       <router-link class="nav" :to="{name:'Rounds', params:{quiz:quiz_id}}">rounds</router-link>
       <router-link class="nav" :to="{name:'Teams', params:{quiz:quiz_id}}">teams</router-link>
     </div>
@@ -81,15 +81,16 @@
           if (this.$route.params.round) {
             this.round_cnt = parseInt(this.$route.params.round)-1;
             if (this.round_cnt<0)this.round_cnt=0;
-            this.round_id = rounds[this.round_cnt].round_id;
+            this.round_id = rounds[this.round_cnt]&&rounds[this.round_cnt].round_id;
+            console.log(this.round_cnt, this.round_id);
           }
 
           quiz.quiz_date = (new Date(quiz.quiz_date)).toDateString();
           this.quiz = quiz;
 
-          this.rounds = rounds.sort((a, b)=>a.round_order - b.round_order);
+          rounds = rounds.sort((a, b)=>a.round_order - b.round_order);
           let cnt = 0;
-          this.roundsi = rounds.reduce((i, r)=> {
+          const roundsi = rounds.reduce((i, r)=> {
             i[r.round_id] = r;
             i.idx = cnt++;
             return i
@@ -97,23 +98,22 @@
 //          if (this.round_cnt < 0)this.round_cnt = 0;
 //          if (this.round_cnt >= this.rounds.length)this.round_cnt = this.rounds.length - 1;
 
-          this.teams = teams.sort((a, b)=>a.team_id - b.team_id).map(t=> {
+          teams = teams.sort((a, b)=>a.team_id - b.team_id).map(t=> {
             t.scores = {};
             t.total=0;
             return t
           });
-          this.teamsi = teams.reduce((i, r)=> {
+          const teamsi = teams.reduce((i, r)=> {
             i[r.team_id] = r;
             return i
           }, {});
 
           jokers.forEach(j=>{
-            this.teamsi[j.team_id].joker_round=j.round_id;
+            teamsi[j.team_id].joker_round=j.round_id;
           });
 
-          this.scores = scores;
           scores.forEach(s=> {
-            const t=this.teamsi[s.team_id];
+            const t=teamsi[s.team_id];
             t.scores[s.round_id] = s;
             t.total+=s.score*(t.joker_round===s.round_id?2:1);
           });
@@ -127,6 +127,12 @@
 
             t.score = t.scores[this.round_id];
           });
+
+          this.teams=teams;
+          this.teamsi=teamsi;
+          this.rounds=rounds;
+          this.roundsi=roundsi;
+          this.scores = scores;
         });
       },
       set(round_id, team_id){

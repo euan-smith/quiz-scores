@@ -23,7 +23,7 @@
         <td><button @click.prevent="remove(quiz.quiz_id)">Delete</button></td>
         <td><a :href="`#/quizzes/${quiz.quiz_id}/rounds`">rounds</a></td>
         <td><a :href="`#/quizzes/${quiz.quiz_id}/teams`">teams</a></td>
-        <td><a :href="`#/quizzes/${quiz.quiz_id}/scores`">scores</a></td>
+        <td><a :href="`#/quizzes/${quiz.quiz_id}/rounds/1/scores`">scores</a></td>
       </tr>
       <tr class="add-row">
         <td></td>
