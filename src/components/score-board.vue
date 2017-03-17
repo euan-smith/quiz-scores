@@ -2,7 +2,7 @@
   <div class="page">
     <h1 class="page-title">{{round_title}}</h1>
     <div class="page-list" :style="{fontSize:fontSize}">
-      <div v-for="team in teamList" class="item-line" :style="{top:team.top, zIndex: team.animating?999:0}">
+      <div v-for="team in teamList" class="item-line" :style="{top:team.top, zIndex: team.animating?999:0, maxWidth:maxLineWidth}">
         <span class="team-name">{{team.name}}</span>
         <span class="round-score" v-show="team.displayed">+{{team.score}}</span>
         <span class="total-score">{{team.total}}</span>
@@ -31,10 +31,12 @@
     },
     name: 'score-board',
     data () {
+      this.update();
       return {
         round_title: "",
         //team_id: n, team_name: s, joker_state: s?, joker, round_score, total_score, applied: b
-        teams: []
+        teams: [],
+        calling: false
       };
     },
     watch:{
@@ -44,6 +46,8 @@
     },
     methods:{
       update(){
+        if (this.calling) return;
+        this.calling=true;
         this.quiz_id = parseInt(this.$route.params.quiz);
         this.round_id = parseInt(this.$route.params.round);
         Promise.all([
@@ -83,6 +87,7 @@
           teams.filter(t=>t.joker && t.joker.round_id===round.round_id).forEach(t=>{t.joker_state="played"});
 
           this.teams=teams;
+          this.calling=false;
         });
       }
     },
@@ -103,6 +108,9 @@
       },
       fontSize(){
         return (50 / this.teams.length).toFixed(1) + "vh";
+      },
+      maxLineWidth(){
+        return (2500 / this.teams.length).toFixed(1) + "vh";
       }
     }
   }
@@ -110,10 +118,15 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+  .page-title{
+    font-size: 48px;
+  }
+
   .item-line {
     display: flex;
     flex-direction: row;
     transition: top 0.5s 0.25s;
+    padding:2px 0 2px 1em;
   }
 
   .team-name {

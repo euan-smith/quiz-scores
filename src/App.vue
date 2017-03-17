@@ -45,6 +45,7 @@
     color: black;
     display: flex;
     flex-direction: column;
+    /*align-items: center;*/
   }
   .page-list{
     position: relative;
@@ -57,7 +58,8 @@
   .item-line{
     position: absolute;
     width:95%;
-    left:2.5%;
+    left:50%;
+    transform: translate(-50%,0);
     padding: 0.5%;
     background: white;
     box-shadow: -2px 3px 18px 2px rgba(0,0,0,0.2);
