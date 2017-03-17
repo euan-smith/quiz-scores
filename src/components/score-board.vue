@@ -12,87 +12,123 @@
 </template>
 
 <script>
-  let cnt=0;
-  let tick=true;
-  setInterval(()=>tick=!tick, 2000);
-export default {
-  name: 'score-board',
-  data () {
-    const rtn= {
-      round_title: "Albums",
-      teams:[
-        {team_id:cnt++, team_name:"The Korfballers", joker:"Held", round_score: 7, total_score:25, displayed: false},
-        {team_id:cnt++, team_name:"The Bee Keepers", joker:"Held", round_score: 5, total_score:25, displayed: false},
-        {team_id:cnt++, team_name:"Quizzicals", joker:"Played", round_score: 8, total_score:24, displayed: false},
-        {team_id:cnt++, team_name:"The Oscar Men", joker:"Used", round_score: 6, total_score:17, displayed: false},
-        {team_id:cnt++, team_name:"One Short of a Quiz Team", joker:"Held", round_score: 8, total_score:30, displayed: false},
-        {team_id:cnt++, team_name:"The No-Hopers", joker:"Held", round_score: 6, total_score:22, displayed: false},
-        {team_id:cnt++, team_name:"The Jackson 5", joker:"Held", round_score: 7, total_score:23, displayed: false},
-        {team_id:cnt++, team_name:"The Clueless", joker:"Held", round_score: 5, total_score:20, displayed: false},
-        {team_id:cnt++, team_name:"The Interlopers", joker:"Played", round_score: 8, total_score:19, displayed: false},
-      ]
-    };
-    const order = rtn.teams.slice().sort((a,b)=>a.total_score>b.total_score).map(t=>t.team_id);
-    let i=0;
-    setInterval(()=>{
-      if (i===order.length){
-        i=0;
-        rtn.teams.forEach(t=>t.displayed=false);
-      } else {
-        do {
-          (tm=>{
-            tm.displayed=true;
-            tm.animating=true;
-            setTimeout(()=>{
-              tm.animating=false;
-            }, 1000);
-          })(rtn.teams[order[i]]);
-          i++;
-        } while (i+5<order.length)
-      }
-    },2000);
-    return rtn;
-  },
-  computed:{
-    teamList(){
-      const scores = this.teams.map(t=>[t.team_id, t.total_score+(t.displayed?t.round_score:0)]).sort((a,b)=>a[1]<b[1]);
-      return this.teams.map(t=>{
-        const idx = scores.findIndex(s=>s[0]===t.team_id);
-        return {
-          name:t.team_name,
-          joker:t.joker,
-          score:t.round_score,
-          displayed:t.displayed,
-          total: scores[idx][1],
-          top:100*idx/scores.length+"%",
-          animating: t.animating
-      }})
+  import {setListener, getQuiz, getQuizRounds, getQuizTeams, getQuizJokers, getQuizScores} from '../qs-lib'
+
+  let cnt = 0;
+  export default {
+    mounted(){
+      //register for messages
+      setListener(m=>{
+        if (m.go) this.$router.push(m.go);
+        if (m.update){
+          this.update();
+        }
+      });
     },
-    fontSize(){
-      return (50/this.teams.length).toFixed(1)+"vh";
+    beforeDestroy(){
+      //deregister
+      setListener(null);
+    },
+    name: 'score-board',
+    data () {
+      return {
+        round_title: "",
+        //team_id: n, team_name: s, joker_state: s?, joker, round_score, total_score, applied: b
+        teams: []
+      };
+    },
+    watch:{
+      "$route"(){
+        this.update();
+      }
+    },
+    methods:{
+      update(){
+        this.quiz_id = parseInt(this.$route.params.quiz);
+        this.round_id = parseInt(this.$route.params.round);
+        Promise.all([
+          getQuizRounds(this.quiz_id),
+          getQuizTeams(this.quiz_id),
+          getQuizScores(this.quiz_id),
+          getQuizJokers(this.quiz_id)
+        ]).then(([
+          {data:{data:rounds}},
+          {data:{data:teams}},
+          {data:{data:scores}},
+          {data:{data:jokers}}
+        ])=> {
+          const round= rounds.find(r=>r.round_id===this.round_id);
+          this.round_title = round.round_title;
+
+          const teamsi={};
+          teams=teams.map(t=>{t.total_score=0; t.joker_state="held"; teamsi[t.team_id]=t; return t}).sort((a,b)=>a.team_id=b.team_id);
+
+          jokers.forEach(j=>{
+            const t=teamsi[j.team_id];
+            t.joker=j;
+          });
+
+          scores.forEach(s=>{
+            if (s.applied){
+              const t=teamsi[j.team_id];
+              if (t.joker && t.joker.round_id===s.round_id){
+                t.total_score+=s.score*2;
+                t.joker_state="taken";
+              }
+              else t.total_score+=s.score;
+              if (s.round_id === round.round_id) t.round_score=s.score;
+            }
+          });
+
+          teams.filter(t=>t.joker && t.joker.round_id===round.round_id).forEach(t=>{t.joker_state="played"});
+
+          this.teams=teams;
+        });
+      }
+    },
+    computed: {
+      teamList(){
+        const scoreOrder = this.teams.sort((a, b)=>a.total_score - b.total_score);
+        return this.teams.map(t=> {
+          const idx = scoreOrder.indexOf(t);
+          return {
+            name: t.team_name,
+            joker: t.joker_status,
+            score: t.round_score,
+            displayed: t.applied,
+            total: t.total_score,
+            top: 100 * idx / this.teams.length + "%",
+          }
+        })
+      },
+      fontSize(){
+        return (50 / this.teams.length).toFixed(1) + "vh";
+      }
     }
   }
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .item-line{
-    display:flex;
+  .item-line {
+    display: flex;
     flex-direction: row;
     transition: top 0.5s 0.25s;
   }
-  .team-name{
+
+  .team-name {
     text-align: left;
     flex: 1 1 auto;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .round-score{
+
+  .round-score {
     flex: 0 0 3em;
   }
-  .total-score{
+
+  .total-score {
     flex: 0 0 3em;
   }
 

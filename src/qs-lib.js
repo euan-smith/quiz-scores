@@ -103,3 +103,27 @@ exports.putQuizScore = function(quiz_id, round_id, team_id, score){
 exports.putQuizJoker = function(quiz_id, round_id, team_id){
   return api.put('/jokers',{quiz_id, round_id, team_id})
 };
+
+!function(){
+  let ticker=null;
+  let listener=null;
+
+  exports.setListener = function(fn){
+    listener=fn;
+    if (!fn && ticker){
+      clearInterval(ticker);
+      ticker=null;
+    }
+    if (fn && !ticker){
+      ticker = setInterval(()=>{
+        api.post('/messages/dequeue').then(({data:r})=>{
+          if (listener && r.length) listener(r[0]);
+        })
+      },500)
+    }
+  };
+
+  exports.send = function(item){
+    return api.post('/messages/enqueue', item);
+  }
+}();
