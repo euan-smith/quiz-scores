@@ -22,6 +22,7 @@ function makeApiGroupedSet(table, item, pkeys, types){
 
   return {
     putOne(req,res,next){
+      Object.keys(types).forEach(k=>{if (typeof req.body[k] === 'undefined') req.body[k]=types[k]});
       let queries = pkeys.map(k=>k+'=${'+k+'}').join(' AND ');
       db.none('delete from '+table+' where '+queries,req.body)
         .then(function(){

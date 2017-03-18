@@ -8,11 +8,7 @@
         <th>title</th>
         <th>description</th>
         <th>date</th>
-        <th></th>
-        <th></th>
-        <th></th>
-        <th></th>
-        <th></th>
+        <th colspan="7"></th>
       </tr>
       <tr v-for="quiz of quizzes">
         <td><input v-model="quiz.quiz_id" style="width: 3em" disabled></td>
@@ -24,6 +20,8 @@
         <td><a :href="`#/quizzes/${quiz.quiz_id}/rounds`">rounds</a></td>
         <td><a :href="`#/quizzes/${quiz.quiz_id}/teams`">teams</a></td>
         <td><a :href="`#/quizzes/${quiz.quiz_id}/rounds/1/scores`">scores</a></td>
+        <td><a :href="`#/quizzes/${quiz.quiz_id}/remote`">remote</a></td>
+        <td><a :href="`#/display/quizzes/${quiz.quiz_id}/rounds/1`">remote</a></td>
       </tr>
       <tr class="add-row">
         <td></td>
@@ -31,10 +29,7 @@
         <td><input v-model="newDesc"></td>
         <td><input v-model="newDate"></td>
         <td><button @click.prevent="add">Add</button></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
+        <td colspan="6"></td>
       </tr>
     </table>
     </div>

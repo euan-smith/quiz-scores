@@ -2,23 +2,25 @@
   <div class="page">
     <h1 class="page-title">{{round_title}}</h1>
     <div class="page-list" :style="{fontSize:fontSize}">
-      <div v-for="team in teamList" class="item-line" :style="{top:team.top, zIndex: team.animating?999:0, maxWidth:maxLineWidth}">
-        <span class="team-name">{{team.name}}</span>
-        <span class="round-score" v-show="team.displayed">+{{team.score}}</span>
-        <span class="total-score">{{team.total}}</span>
+      <div v-for="team in teams" :key="team.team_id" class="item-line" :style="{top:team.top,zIndex:team.zIndex, maxWidth:maxLineWidth}">
+        <span class="team-name">{{team.team_name}}</span>
+        <span class="round-score" v-show="team.applied">+{{team.round_score}}</span>
+        <span class="total-score">{{team.total_score}}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-  import {setListener, getQuiz, getQuizRounds, getQuizTeams, getQuizJokers, getQuizScores} from '../qs-lib'
+  import {setListener, getQuiz, getQuizRounds, getQuizTeams, getQuizJokers, getQuizScores,dynamicSort, dynamicSortMulti} from '../qs-lib'
 
   let cnt = 0;
   export default {
     mounted(){
       //register for messages
       setListener(m=>{
+        console.log(m);
+
         if (m.go) this.$router.push(m.go);
         if (m.update){
           this.update();
@@ -65,7 +67,8 @@
           this.round_title = round.round_title;
 
           const teamsi={};
-          teams=teams.map(t=>{t.total_score=0; t.joker_state="held"; teamsi[t.team_id]=t; return t}).sort((a,b)=>a.team_id=b.team_id);
+          teams.forEach(t=>{t.total_score=0; t.joker_state="held"; teamsi[t.team_id]=t});
+          teams.sort((a,b)=>a.team_id=b.team_id);
 
           jokers.forEach(j=>{
             const t=teamsi[j.team_id];
@@ -74,17 +77,25 @@
 
           scores.forEach(s=>{
             if (s.applied){
-              const t=teamsi[j.team_id];
+              const t=teamsi[s.team_id];
               if (t.joker && t.joker.round_id===s.round_id){
                 t.total_score+=s.score*2;
                 t.joker_state="taken";
               }
               else t.total_score+=s.score;
-              if (s.round_id === round.round_id) t.round_score=s.score;
+              if (s.round_id === this.round_id) {
+                t.round_score=s.score;
+                t.applied = s.applied;
+              }
             }
           });
 
-          teams.filter(t=>t.joker && t.joker.round_id===round.round_id).forEach(t=>{t.joker_state="played"});
+          teams.filter(t=>t.joker && t.joker.round_id===this.round_id).forEach(t=>{t.joker_state="played"});
+          let cnt=0;
+          teams.slice().sort(dynamicSortMulti(['-total_score','-team_id'])).forEach(t=>{
+            t.top=(100 * cnt / teams.length).toFixed(1) + "%";
+            t.zIndex=100-cnt++;
+          });
 
           this.teams=teams;
           this.calling=false;
@@ -93,7 +104,7 @@
     },
     computed: {
       teamList(){
-        const scoreOrder = this.teams.sort((a, b)=>a.total_score - b.total_score);
+        const scoreOrder = this.teams.sort((a, b)=>b.total_score - a.total_score);
         return this.teams.map(t=> {
           const idx = scoreOrder.indexOf(t);
           return {

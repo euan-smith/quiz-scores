@@ -7,6 +7,7 @@ import Teams from '@/components/Teams'
 import Scores from '@/components/Scores'
 import ScoreBoard from '@/components/score-board'
 import QuizRounds from '@/components/quiz-rounds'
+import Remote from '@/components/Remote'
 
 Vue.use(Router);
 
@@ -17,11 +18,11 @@ export default new Router({
       name: 'Hello',
       component: Hello
     },{
-      path: '/display/quizzes/:quiz/rounds/:round',
+      path: '/display/quizzes/:quiz/rounds/:round/scores',
       name: 'Score Board',
       component: ScoreBoard
     },{
-      path: '/display/quizzes/:quiz/rounds',
+      path: '/display/quizzes/:quiz/rounds/:round',
       name: 'Quiz Round',
       component: QuizRounds
     },{
@@ -44,6 +45,10 @@ export default new Router({
       path: '/quizzes/:quiz/rounds/:round/scores',
       name: 'Round Scores',
       component: Scores
+    },{
+      path: '/quizzes/:quiz/remote',
+      name: 'Remote',
+      component: Remote
     }
   ]
 })

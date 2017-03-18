@@ -100,6 +100,10 @@ exports.putQuizScore = function(quiz_id, round_id, team_id, score){
   return api.put('/scores',{quiz_id, round_id, team_id, score})
 };
 
+exports.putQuizScoreObj = function(s){
+  return api.put('/scores',s)
+};
+
 exports.putQuizJoker = function(quiz_id, round_id, team_id){
   return api.put('/jokers',{quiz_id, round_id, team_id})
 };
@@ -127,3 +131,33 @@ exports.putQuizJoker = function(quiz_id, round_id, team_id){
     return api.post('/messages/enqueue', item);
   }
 }();
+
+function dynamicSort(property) {
+  var sortOrder = 1;
+  if(property[0] === "-") {
+    sortOrder = -1;
+    property = property.substr(1);
+  }
+  return function (a,b) {
+    var result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
+    return result * sortOrder;
+  }
+}
+
+function dynamicSortMulti(props) {
+  return function (obj1, obj2) {
+    var i = 0, result = 0, len=props.length;
+    /* try getting a different result from 0 (equal)
+     * as long as we have extra properties to compare
+     */
+    while(result === 0 && i < len) {
+      result = dynamicSort(props[i])(obj1, obj2);
+      i++;
+    }
+    return result;
+  }
+}
+
+exports.dynamicSort=dynamicSort;
+
+exports.dynamicSortMulti=dynamicSortMulti;

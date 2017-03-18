@@ -33,22 +33,32 @@ function makeGroupApi(root, table, item, pkeys, types){
   app.delete(tablePath,set.deleteAll);
 }
 
-makeGroupApi('/api/v1','Scores','score',['team_id','round_id','quiz_id'],{score:0});
+makeGroupApi('/api/v1','Scores','score',['team_id','round_id','quiz_id'],{score:0,applied:false});
 makeGroupApi('/api/v1','Jokers','joker',['team_id','quiz_id'],{round_id:-1});
 
 
 const messages=[];
-app.post('/api/v1/messages/enqueue', function(req,res,next){
+app.post('/api/v1/messages/enqueue', function(req,res){
   messages.push(req.body);
   res.send('OK');
 });
 
-app.get('/api/v1/messages', function(req,res,next){
+app.get('/api/v1/messages', function(req,res){
   res.send(messages);
 });
 
-app.post('/api/v1/messages/dequeue', function(req,res,next){
+app.post('/api/v1/messages/dequeue', function(req,res){
   res.send(messages.splice(0,1));
+});
+
+let state=null;
+app.put('/api/v1/app-state', function(req,res){
+  state=req.body;
+  res.send('OK');
+});
+
+app.get('/api/v1/app-state', function(req,res){
+  res.send(state);
 });
 
 
