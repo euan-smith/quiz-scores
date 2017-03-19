@@ -1,183 +1,86 @@
 /**
- * Created by euans on 05/03/2017.
+ * Created by euans on 19/03/2017.
  */
-var promise = require('bluebird');
+var bodyParser = require('body-parser');
+var dbApi = require('./db-api');
 
-var options = {
-  // Initialization Options
-  promiseLib: promise
-};
+module.exports=function(app)
+{
+  app.use(require('cors')());
 
-var pgp = require('pg-promise')(options);
-var cn = {
-  host: 'localhost',
-  port: 5432,
-  database: 'quiz_scores',
-  user: 'quiz_master'
-};
-var db = pgp(cn);
+  app.use(bodyParser.json());
 
-function makeApiGroupedSet(table, item, pkeys, types){
-  const keys=Object.keys(types).concat(pkeys);
-
-  return {
-    putOne(req,res,next){
-      Object.keys(types).forEach(k=>{if (typeof req.body[k] === 'undefined') req.body[k]=types[k]});
-      let queries = pkeys.map(k=>k+'=${'+k+'}').join(' AND ');
-      db.none('delete from '+table+' where '+queries,req.body)
-        .then(function(){
-          return db.one('insert into '+table+'('+keys.join(', ')+')' +
-            'values('+keys.map(k=>'${'+k+'}').join(', ')+') returning *', req.body)
-        })
-        .then(function (r) {
-          res.status(200)
-            .json({
-              status: 'success',
-              data:r,
-              message: 'Put selected '+item
-            });
-        })
-        .catch(function (err) {
-          return next(err);
-        });
-
-    },
-
-    getAll(req, res, next){
-      let queries = Object.keys(req.query);
-      if (queries.length){
-        queries=' WHERE '+queries.map(q=>q+'=${'+q+'}').join(',')
-      } else queries='';
-      db.any('select * from '+table+queries,req.query)
-        .then(function (data) {
-          res.status(200)
-            .json({
-              status: 'success',
-              data: data,
-              message: 'Retrieved ALL '+table
-            });
-        })
-        .catch(function (err) {
-          return next(err);
-        });
-    },
-
-    deleteAll(req, res, next){
-      let queries = Object.keys(req.query);
-      if (queries.length){
-        queries=' WHERE '+queries.map(q=>q+'=${'+q+'}').join(' AND ')
-      } else queries='';
-      db.none('DELETE FROM '+table+queries,req.query)
-        .then(function () {
-          res.status(200)
-            .json({
-              status: 'success',
-              message: 'Deleted selected '+table
-            });
-        })
-        .catch(function (err) {
-          return next(err);
-        });
-    }
+  function makeTableApi(root, table, item, types) {
+    const set = dbApi.makeApiSet(table, item, types);
+    const tablePath = `${root}/${table}`.toLowerCase();
+    const itemPath = `${tablePath}/:${item}`.toLowerCase();
+    app.get(tablePath, set.getAll);
+    app.post(tablePath, set.create);
+    app.get(itemPath, set.getOne);
+    app.patch(itemPath, set.modify);
+    app.delete(itemPath, set.deleteOne);
   }
-}
 
-function makeApiSet(table, item, types){
-  const keys=Object.keys(types);
-  return {
-    create(req,res,next){
-      for(let t of keys)
-        if (types[t] && typeof req.body[t] === "undefined") req.body[t]=types[t];
-      db.one('insert into '+table+'('+keys.join(', ')+')' +
-        'values('+keys.map(k=>'${'+k+'}').join(', ')+') returning *', req.body)
-        .then(function(r){
-          res.status(200)
-            .json({
-              status: 'success',
-              message: 'Inserted one '+item,
-              data: r
-            });
-        })
-        .catch(function (err) {
-          return next(err);
-        });
-    },
+  makeTableApi('/api/v1', 'Quizzes', 'quiz', {quiz_title: undefined, quiz_description: '-', quiz_date: '1970-01-01'});
+  makeTableApi('/api/v1', 'Teams', 'team', {team_name: undefined, quiz_id: -1});
+  makeTableApi('/api/v1', 'Rounds', 'round', {
+    round_title: undefined,
+    can_play_joker: true,
+    quiz_id: -1,
+    round_order: -1
+  });
 
-    getOne(req, res, next){
-      var id = parseInt(req.params[item]);
-      db.one('select * from '+table+' where '+item+'_id = $1', id)
-        .then(function (data) {
-          res.status(200)
-            .json({
-              status: 'success',
-              data: data,
-              message: 'Retrieved ONE '+item
-            });
-        })
-        .catch(function (err) {
-          return next(err);
-        });
-    },
-
-    getAll(req, res, next){
-      let queries = Object.keys(req.query);
-      if (queries.length){
-        queries=' WHERE '+queries.map(q=>q+'=${'+q+'}').join(',')
-      } else queries='';
-      db.any('select * from '+table+queries,req.query)
-        .then(function (data) {
-          res.status(200)
-            .json({
-              status: 'success',
-              data: data,
-              message: 'Retrieved ALL '+table
-            });
-        })
-        .catch(function (err) {
-          return next(err);
-        });
-    },
-
-    modify(req, res, next){
-      req.body.id = parseInt(req.params[item]);
-      let sets=[];
-      for (let t of keys){
-        if (typeof req.body[t] !== "undefined") sets.push(t+'=${'+t+'}');
-      }
-      if (!sets.length) return next(new Error('modify with no valid body'));
-      db.one('update '+table+' set '+sets.join(',')+' where '+item+'_id = ${id} returning *', req.body)
-        .then(function (data) {
-          res.status(200)
-            .json({
-              status: 'success',
-              data: data,
-              message: 'Modified ONE '+item
-            });
-        })
-        .catch(function (err) {
-          return next(err);
-        });
-
-    },
-
-    deleteOne(req, res, next){
-      var id = parseInt(req.params[item]);
-      db.none('delete from '+table+' where '+item+'_id = $1', id)
-        .then(function () {
-          res.status(200)
-            .json({
-              status: 'success',
-              message: 'Deleted ONE '+item
-            });
-        })
-        .catch(function (err) {
-          return next(err);
-        });
-    }
+  function makeGroupApi(root, table, item, pkeys, types) {
+    const set = dbApi.makeApiGroupedSet(table, item, pkeys, types);
+    const tablePath = `${root}/${table}`.toLowerCase();
+    app.get(tablePath, set.getAll);
+    app.put(tablePath, set.putOne);
+    app.delete(tablePath, set.deleteAll);
   }
-}
 
-module.exports={
-  makeApiSet,
-  makeApiGroupedSet
+  makeGroupApi('/api/v1', 'Scores', 'score', ['team_id', 'round_id', 'quiz_id'], {score: 0, applied: false});
+  makeGroupApi('/api/v1', 'Jokers', 'joker', ['team_id', 'quiz_id'], {round_id: -1});
+
+
+  const messages = [];
+  app.post('/api/v1/messages/enqueue', function (req, res) {
+    messages.push(req.body);
+    res.send('OK');
+  });
+
+  app.get('/api/v1/messages', function (req, res) {
+    res.send(messages);
+  });
+
+  app.post('/api/v1/messages/dequeue', function (req, res) {
+    res.send(messages.splice(0, 1));
+  });
+
+  let state = null;
+  app.put('/api/v1/app-state', function (req, res) {
+    state = req.body;
+    res.send('OK');
+  });
+
+  app.get('/api/v1/app-state', function (req, res) {
+    res.send(state);
+  });
+
+
+  app.use(function (req, res, next) {
+    console.log(req.url + " not found");
+    var err = new Error('Not Found');
+    err.status = 404;
+    next(err);
+  });
+
+// error handler
+  app.use(function (err, req, res, next) {
+    // set locals, only providing error in development
+    res.locals.message = err.message;
+    res.locals.error = err;
+
+    // render the error page
+    res.status(err.status || 500).send(err.message);
+  });
 };
