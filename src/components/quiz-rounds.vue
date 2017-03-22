@@ -1,16 +1,22 @@
 <template>
   <div class="page">
     <h1 class="page-title">{{quiz_title}}</h1>
-    <div class="page-list" :style="{fontSize:fontSize}">
-      <div class="item-line" :class="{complete: round.complete}" v-for="round of rounds" :style="{top:round.top}">
-        {{round.round_title}}
+    <div class="round-list non-seq">
+      <div class="round-item" :class="{current: round.round_id===round_id && showCurrent}" v-for="round of nonSeqRounds">
+        <div class="title">{{round.round_title}}</div>
+      </div>
+    </div>
+    <div class="round-list">
+      <div class="round-item" :class="{current: round.round_id===round_id && showCurrent}" v-for="(round,i) of rounds">
+        <div class="index">{{i+1}}</div>
+        <div class="title">{{round.round_title}}</div>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-  import {setListener, getQuiz, getQuizRounds} from '../qs-lib'
+<script type="text/babel">
+  import {setListener, getQuiz, getQuizRounds, dynamicSort} from '../qs-lib'
 
   export default {
     name: 'rounds',
@@ -38,7 +44,11 @@
       this.update();
       return {
         quiz_title: "",
-        rounds: []
+        rounds: [],
+        nonSeqRounds:[],
+        round_id:-1,
+        quiz_id:-1,
+        showCurrent:false
       }
     },
     methods: {
@@ -54,25 +64,14 @@
         ])=> {
           quiz.quiz_date = (new Date(quiz.quiz_date)).toDateString();
 
-          rounds = rounds.sort((a, b)=>a.round_order - b.round_order);
-          let prev = true;
-          let cnt = 0;
-          const roundsi = rounds.reduce((i, r)=> {
-            if (r.round_id === this.round_id) prev = false;
-            r.complete = prev;
-            r.top = (100*cnt++ / rounds.length).toFixed(1) + "%";
-            i[r.round_id] = r;
-            return i
-          }, {});
+          rounds = rounds.sort(dynamicSort("round_order"));
 
           this.quiz_title = quiz.quiz_title;
-          this.rounds = rounds;
+          this.rounds = rounds.filter(r=>r.sequential);
+          this.nonSeqRounds = rounds.filter(r=>!r.sequential);
+          this.showCurrent=false;
+          setTimeout(()=>this.showCurrent=true,500);
         });
-      }
-    },
-    computed: {
-      fontSize(){
-        return (50 / this.rounds.length).toFixed(1) + "vh";
       }
     }
   }
@@ -81,21 +80,51 @@
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
   .page {
-    background: white;
+    background: #e0e0e0;
   }
 
-  .rounds {
-    width: 100%;
-    height: 100%
+  .title{
+    position:absolute;
+    font-size:4vh;
+    width:100%;
+    margin:0;
+    top:50%;
+    left:0;
+    text-align: center;
+    transform: translate(0,-50%);
   }
 
+  .index{
+    font-size:5vh;
+    color:#444;
+    top:0;
+    left:0;
+    width: 10vh;
+    padding:1vh;
+    text-align: left;
+  }
+
+  .round-item{
+    position:relative;
+    background: #f0f0f0;
+    color:black;
+    width: 20vw;
+    margin: 2vw;
+    height: 20vh;
+    /*border:1px solid black;*/
+    box-shadow: -2px 3px 18px 2px rgba(0,0,0,0.25);
+    transition: all 1s;
+  }
+  .round-item.current{
+    background: #ffffff;
+    box-shadow: -4px 6px 36px 4px rgba(0,0,0,0.5);
+  }
   .round-list {
     position: relative;
+    display:flex;
+    flex-direction: row;
+    flex-flow: wrap;
+    justify-content: center;
   }
 
-  .item-line.complete {
-    color: #aaa;
-    text-decoration: line-through;
-    box-shadow: -1px 1px 9px 1px rgba(0, 0, 0, 0.1);
-  }
 </style>

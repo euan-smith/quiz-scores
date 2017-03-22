@@ -27,7 +27,8 @@ module.exports=function(app)
     round_title: undefined,
     can_play_joker: true,
     quiz_id: -1,
-    round_order: -1
+    round_order: -1,
+    sequential: true
   });
 
   function makeGroupApi(root, table, item, pkeys, types) {

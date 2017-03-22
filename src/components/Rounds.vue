@@ -8,6 +8,7 @@
           <th>order</th>
           <th>title</th>
           <th>joker ok?</th>
+          <th>sequential?</th>
           <th></th>
         </tr>
         <tr v-for="round of rounds">
@@ -15,6 +16,7 @@
           <td><input v-model="round.round_order" @blur.prevent="modify(round.round_id)"></td>
           <td><input v-model="round.round_title" @blur.prevent="modify(round.round_id)"></td>
           <td><input v-model="round.can_play_joker" type="checkbox" @keyup.enter.prevent="modify(round.round_id)"></td>
+          <td><input v-model="round.sequential" type="checkbox" @keyup.enter.prevent="modify(round.round_id)"></td>
           <td><button @click.prevent="remove(round.round_id)">Delete</button></td>
         </tr>
         <tr class="add-row">
@@ -22,6 +24,7 @@
           <td><input v-model="newOrder" @keyup.enter.prevent="add"></td>
           <td><input v-model="newTitle" @keyup.enter.prevent="add"></td>
           <td><input v-model="canPlayJoker" type="checkbox" @keyup.enter.prevent="add"></td>
+          <td><input v-model="isSequential" type="checkbox" @keyup.enter.prevent="add"></td>
           <td><button @click.prevent="add">Add</button></td>
         </tr>
       </table>
@@ -38,6 +41,7 @@
         newTitle:"round title",
         newOrder:0,
         canPlayJoker:true,
+        isSequential:true,
         newDate:(new Date()).toDateString(),
         quiz_id:-1,
         quiz:{},
@@ -58,7 +62,7 @@
           this.rounds = r.data.data.sort((a,b)=>a.round_id-b.round_id);
         })
       },
-      add(){return createQuizRound(this.quiz_id, this.newOrder, this.newTitle, this.canPlayJoker).then(()=>this.update())},
+      add(){return createQuizRound(this.quiz_id, this.newOrder, this.newTitle, this.canPlayJoker, this.isSequential).then(()=>{this.newOrder++; this.update()})},
       remove(id){return deleteRound(id).then(()=>this.update())},
       modify(id){
         const r = this.rounds.find(r=>r.round_id===id);
