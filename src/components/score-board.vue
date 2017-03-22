@@ -2,7 +2,8 @@
   <div class="page">
     <h1 class="page-title">{{round_title}}</h1>
     <div class="page-list" :style="{fontSize:fontSize}">
-      <div v-for="team in teams" :key="team.team_id" class="item-line" :style="{top:team.top,zIndex:team.zIndex, maxWidth:maxLineWidth}">
+      <div v-for="team in teams" :key="team.team_id" class="item-line" :style="{top:team.top,zIndex:team.zIndex, width:lineWidth, left:team.left}">
+        <span class="position">{{team.pos}}</span>
         <span class="team-name">{{team.team_name}}</span>
         <span class="round-score" v-show="team.applied">+{{team.round_score}}</span>
         <span class="total-score">{{team.total_score}}</span>
@@ -13,7 +14,7 @@
 
 <script>
   import {setListener, getQuiz, getQuizRounds, getQuizTeams, getQuizJokers, getQuizScores,dynamicSort, dynamicSortMulti} from '../qs-lib'
-
+  import ord from 'ord';
   let cnt = 0;
   export default {
     mounted(){
@@ -38,7 +39,10 @@
         round_title: "",
         //team_id: n, team_name: s, joker_state: s?, joker, round_score, total_score, applied: b
         teams: [],
-        calling: false
+        calling: false,
+        columns:1,
+        lineWidth:90,
+        fontSize: "5vh"
       };
     },
     watch:{
@@ -89,41 +93,30 @@
               }
             }
           });
+          teams=teams.slice(0);
+          const columns=Math.floor(Math.sqrt(teams.length)/3+1);
+          const colCount=Math.ceil(teams.length/columns);
+          const maxLineWidth=90/columns;
 
           teams.filter(t=>t.joker && t.joker.round_id===this.round_id).forEach(t=>{t.joker_state="played"});
           let cnt=0;
-          teams.slice().sort(dynamicSortMulti(['-total_score','-team_id'])).forEach(t=>{
-            t.top=(100 * cnt / teams.length).toFixed(1) + "%";
+          teams.slice().sort(dynamicSortMulti(['-total_score','team_name'])).forEach(t=>{
+            t.top=(100 * ((cnt % colCount)*2+Math.floor(cnt/colCount)) / (teams.length+columns-1)).toFixed(1) + "%";
+            t.left=((Math.floor(cnt/colCount)*100+5)/columns).toFixed(1)+"%";
             t.zIndex=100-cnt++;
+            t.pos=cnt+ord(cnt);
           });
+          //max: 9vh for 1 col, 6vh for 2 col
+          this.fontSize=Math.min(15/(columns+1),45 * columns / (teams.length)).toFixed(1) + "vh";
 
+
+          this.columns=columns.toFixed(1);
+          this.lineWidth=maxLineWidth.toFixed(1)+"%";
           this.teams=teams;
           this.calling=false;
         });
       }
     },
-    computed: {
-      teamList(){
-        const scoreOrder = this.teams.sort((a, b)=>b.total_score - a.total_score);
-        return this.teams.map(t=> {
-          const idx = scoreOrder.indexOf(t);
-          return {
-            name: t.team_name,
-            joker: t.joker_status,
-            score: t.round_score,
-            displayed: t.applied,
-            total: t.total_score,
-            top: 100 * idx / this.teams.length + "%",
-          }
-        })
-      },
-      fontSize(){
-        return (50 / this.teams.length).toFixed(1) + "vh";
-      },
-      maxLineWidth(){
-        return (2500 / this.teams.length).toFixed(1) + "vh";
-      }
-    }
   }
 </script>
 
@@ -132,14 +125,15 @@
   .page-title{
     font-size: 48px;
   }
-
   .item-line {
     display: flex;
     flex-direction: row;
-    transition: top 0.5s 0.25s;
-    padding:2px 0 2px 1em;
+    transition: top 0.75s 0.5s, left 0.75s 0.5s;
+    padding:5px 0 5px 1em;
   }
-
+  .position{
+    padding:0 0.5em;
+  }
   .team-name {
     text-align: left;
     flex: 1 1 auto;

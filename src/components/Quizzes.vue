@@ -21,7 +21,7 @@
         <td><a :href="`#/quizzes/${quiz.quiz_id}/teams`">teams</a></td>
         <td><a :href="`#/quizzes/${quiz.quiz_id}/rounds/1/scores`">scores</a></td>
         <td><a :href="`#/quizzes/${quiz.quiz_id}/remote`">remote</a></td>
-        <td><a :href="`#/display/quizzes/${quiz.quiz_id}/rounds/1`">remote</a></td>
+        <td><a :href="`#/display/quizzes/${quiz.quiz_id}/rounds/1`">display</a></td>
       </tr>
       <tr class="add-row">
         <td></td>

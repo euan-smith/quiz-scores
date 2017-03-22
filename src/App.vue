@@ -15,6 +15,7 @@
     margin: 0;
     padding: 0;
     border: 0;
+    box-sizing: border-box;
   }
   #app, body, html {
     width: 100%;
@@ -58,8 +59,8 @@
   .item-line{
     position: absolute;
     width:95%;
-    left:50%;
-    transform: translate(-50%,0);
+    /*left:50%;*/
+    /*transform: translate(-50%,0);*/
     padding: 0.5%;
     background: white;
     box-shadow: -2px 3px 18px 2px rgba(0,0,0,0.2);

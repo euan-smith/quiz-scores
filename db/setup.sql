@@ -48,6 +48,7 @@ CREATE TABLE Rounds (
   round_title VARCHAR(100),
   quiz_id INTEGER NOT NULL,
   can_play_joker BOOLEAN,
+  sequential BOOLEAN,
   round_order INTEGER NOT NULL,
 
   CONSTRAINT Round_PK

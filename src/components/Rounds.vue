@@ -9,14 +9,12 @@
           <th>title</th>
           <th>joker ok?</th>
           <th></th>
-          <th></th>
         </tr>
         <tr v-for="round of rounds">
           <td><input v-model="round.round_id" style="width: 3em" disabled></td>
-          <td><input v-model="round.round_order" @keyup.enter.prevent="modify(round.round_id)"></td>
-          <td><input v-model="round.round_title" @keyup.enter.prevent="modify(round.round_id)"></td>
+          <td><input v-model="round.round_order" @blur.prevent="modify(round.round_id)"></td>
+          <td><input v-model="round.round_title" @blur.prevent="modify(round.round_id)"></td>
           <td><input v-model="round.can_play_joker" type="checkbox" @keyup.enter.prevent="modify(round.round_id)"></td>
-          <td><button @click.prevent="modify(round.round_id)">Modify</button></td>
           <td><button @click.prevent="remove(round.round_id)">Delete</button></td>
         </tr>
         <tr class="add-row">
@@ -25,7 +23,6 @@
           <td><input v-model="newTitle" @keyup.enter.prevent="add"></td>
           <td><input v-model="canPlayJoker" type="checkbox" @keyup.enter.prevent="add"></td>
           <td><button @click.prevent="add">Add</button></td>
-          <td></td>
         </tr>
       </table>
     </div>
