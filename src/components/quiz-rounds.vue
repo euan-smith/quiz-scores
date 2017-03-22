@@ -4,12 +4,14 @@
     <div class="round-list non-seq">
       <div class="round-item" :class="{current: round.round_id===round_id && showCurrent}" v-for="round of nonSeqRounds">
         <div class="title">{{round.round_title}}</div>
+        <div class="joker" v-show="round.can_play_joker"></div>
       </div>
     </div>
     <div class="round-list">
       <div class="round-item" :class="{current: round.round_id===round_id && showCurrent}" v-for="(round,i) of rounds">
         <div class="index">{{i+1}}</div>
         <div class="title">{{round.round_title}}</div>
+        <div class="joker" v-show="round.can_play_joker"></div>
       </div>
     </div>
   </div>
@@ -104,8 +106,19 @@
     text-align: left;
   }
 
+  .joker{
+    position:absolute;
+    width:5vh;
+    height:8vh;
+    background-image: url(joker.png);
+    background-size: 5vh auto;
+    top:0;
+    right:0;
+  }
+
   .round-item{
     position:relative;
+    color: rgba(0,0,0,0.6);
     background: #f0f0f0;
     color:black;
     width: 20vw;
@@ -116,6 +129,7 @@
     transition: all 1s;
   }
   .round-item.current{
+    color: black;
     background: #ffffff;
     box-shadow: -4px 6px 36px 4px rgba(0,0,0,0.5);
   }
