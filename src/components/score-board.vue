@@ -4,8 +4,8 @@
     <div class="page-list" :style="{fontSize:fontSize}">
       <div v-for="team in teams" :key="team.team_id" class="item-line" :style="{top:team.top,zIndex:team.zIndex, width:lineWidth, left:team.left}">
         <span class="position">{{team.pos}}</span>
-        <span class="team-name">{{team.team_name}}</span>
-        <span class="round-score" v-show="team.applied">+{{team.round_score}}</span>
+        <span class="team-name" :class="{joker: team.joker_state==='held'}">{{team.team_name}}</span>
+        <span class="round-score" :class="{joker: team.joker_state==='played'}"><span v-show="team.applied">+{{team.round_score}}</span></span>
         <span class="total-score">{{team.total_score}}</span>
       </div>
     </div>
@@ -129,17 +129,31 @@
     display: flex;
     flex-direction: row;
     transition: top 0.75s 0.5s, left 0.75s 0.5s;
-    padding:5px 0 5px 1em;
+    padding:5px 0 5px 0.2em;
   }
   .position{
-    padding:0 0.5em;
+    margin:0;
+    padding:0;
+    width: 2.5em;
   }
   .team-name {
+    padding: 0 0 0 0.5em;
     text-align: left;
     flex: 1 1 auto;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .joker::after{
+    display:inline-block;
+    position:relative;
+    top:-0.25em;
+    left:0.25em;
+    content: "";
+    width:0.75em;
+    height: 0.8em;
+    background-image: url(joker.png);
+    background-size: 0.75em auto;
   }
 
   .round-score {
