@@ -170,3 +170,11 @@ function dynamicSortMulti(props) {
 exports.dynamicSort=dynamicSort;
 
 exports.dynamicSortMulti=dynamicSortMulti;
+
+exports.roundSorter=(a,b)=>{
+  if (a.sequential<b.sequential) return -1;
+  if (a.sequential>b.sequential) return 1;
+  if (a.round_order>b.round_order) return 1;
+  if (a.round_order<b.round_order) return -1;
+  return 0;
+};

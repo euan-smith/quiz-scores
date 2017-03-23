@@ -90,10 +90,13 @@
     font-size:4vh;
     width:100%;
     margin:0;
-    top:50%;
+    top:60%;
     left:0;
     text-align: center;
     transform: translate(0,-50%);
+  }
+  .non-seq .title{
+    top:50%;
   }
 
   .index{
@@ -119,14 +122,14 @@
   .round-item{
     position:relative;
     color: rgba(0,0,0,0.6);
-    background: #f0f0f0;
+    background: #f0f0f8;
     color:black;
     width: 20vw;
     margin: 2vw;
     height: 20vh;
     /*border:1px solid black;*/
     box-shadow: -2px 3px 18px 2px rgba(0,0,0,0.25);
-    transition: all 1s;
+    transition: box-shadow 1s, background 1s;
   }
   .round-item.current{
     color: black;

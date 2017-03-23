@@ -43,7 +43,7 @@
 </template>
 
 <script>
-  import {getAppState, setAppState, send, getQuiz, getQuizRounds, getQuizTeams, getQuizJokers, getQuizScores, putQuizScoreObj, dynamicSort, dynamicSortMulti} from '../qs-lib';
+  import {roundSorter, getAppState, setAppState, send, getQuiz, getQuizRounds, getQuizTeams, getQuizJokers, getQuizScores, putQuizScoreObj, dynamicSort, dynamicSortMulti} from '../qs-lib';
   import shuffle from 'shuffle-array';
   export default {
     name: 'hello',
@@ -68,6 +68,9 @@
     },
     methods: {
       showTeam(){
+        if (this.showing === "rounds" || this.showing === "scores"){
+          send({go:`/display/quizzes/${this.quiz_id}/teams/-1`})
+        }
         getAppState().then(({data:state})=>{
           if (!state )state={};
           if (!state.teamList) state.teamList=[];
@@ -88,10 +91,11 @@
         send({countdown:10});
       },
       selectRound(r_id){
-        console.log(r_id);
-        this.selected_round=r_id;
+        if (this.selected_round===r_id) this.selected_round=null;
+        else this.selected_round=r_id;
       },
       showScores(r_id){
+        if (r_id==null)return;
         send({go:`/display/quizzes/${this.quiz_id}/rounds/${r_id}/scores/`}).then(()=>this.update());
         this.showing='scores';
         //make a list of scores sorted by total without this round
@@ -125,7 +129,12 @@
         this.score_actions=sa;
       },
       showRounds(r_id){
-        send({go:`/display/quizzes/${this.quiz_id}/rounds/${r_id}/`}).then(()=>this.update());
+        if (this.showing!=='rounds'){
+          send({go:`/display/quizzes/${this.quiz_id}/rounds/-1/`}).then(()=>this.update())
+              .then(()=>send({go:`/display/quizzes/${this.quiz_id}/rounds/${r_id}/`}).then(()=>this.update()))
+        } else {
+          send({go:`/display/quizzes/${this.quiz_id}/rounds/${r_id}/`}).then(()=>this.update());
+        }
         this.showing='rounds';
         this.score_actions=[];
       },
@@ -189,8 +198,7 @@
           quiz.quiz_date = (new Date(quiz.quiz_date)).toDateString();
           this.quiz = quiz;
 
-          rounds = rounds.sort((a, b)=>a.round_order - b.round_order);
-          let cnt = 0;
+          rounds = rounds.sort(roundSorter);
           const roundsi = rounds.reduce((i, r)=> {
             r.score_cnt=0;
             i[r.round_id] = r;

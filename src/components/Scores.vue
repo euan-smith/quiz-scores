@@ -35,8 +35,8 @@
   </div>
 </template>
 
-<script>
-  import {getQuiz, getQuizRounds, getQuizTeams, getQuizJokers, getQuizScores, deleteQuizJoker, deleteQuizScore, putQuizJoker, putQuizScore} from '../qs-lib';
+<script type="text/babel">
+  import {roundSorter, getQuiz, getQuizRounds, getQuizTeams, getQuizJokers, getQuizScores, deleteQuizJoker, deleteQuizScore, putQuizJoker, putQuizScore} from '../qs-lib';
   export default {
     name: 'hello',
     data () {
@@ -78,6 +78,7 @@
           {data:{data:scores}},
           {data:{data:jokers}}
         ])=> {
+          rounds = rounds.sort(roundSorter);
           if (this.$route.params.round) {
             this.round_cnt = parseInt(this.$route.params.round)-1;
             if (this.round_cnt<0)this.round_cnt=0;
@@ -88,7 +89,6 @@
           quiz.quiz_date = (new Date(quiz.quiz_date)).toDateString();
           this.quiz = quiz;
 
-          rounds = rounds.sort((a, b)=>a.round_order - b.round_order);
           let cnt = 0;
           const roundsi = rounds.reduce((i, r)=> {
             i[r.round_id] = r;
@@ -227,6 +227,10 @@
   .page-footer{
     padding: 10px;
     height:25px;
+    position:fixed;
+    bottom:1em;
+    left:50%;
+    transform:translate(-50%,0);
   }
   .nav{
     font-size:20px;
