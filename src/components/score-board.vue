@@ -155,6 +155,11 @@
     background-image: url(joker.png);
     background-size: 0.75em auto;
   }
+  .round-score.joker::after{
+    color: rgba(0,0,0,0);
+    content: "O";
+    text-shadow: 0 0 18px yellow;
+  }
 
   .round-score {
     flex: 0 0 3em;

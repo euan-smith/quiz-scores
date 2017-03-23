@@ -108,6 +108,15 @@ exports.putQuizJoker = function(quiz_id, round_id, team_id){
   return api.put('/jokers',{quiz_id, round_id, team_id})
 };
 
+
+exports.getAppState = function(){
+  return api.get('/app-state');
+};
+
+exports.setAppState = function(state){
+  return api.put('/app-state',state);
+};
+
 !function(){
   let ticker=null;
   let listener=null;

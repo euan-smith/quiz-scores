@@ -16,10 +16,18 @@
       </tr>
       <tr>
         <td colspan="3">
-          <button :class="{selected:showing_scores}" @click.prevent="showScores(selected_round)">Score Board</button>
+          <button :class="{selected:showing==='scores'}" @click.prevent="showScores(selected_round)">Score Board</button>
         </td>
         <td colspan="2">
-          <button :class="{selected:!showing_scores}" @click.prevent="showRounds(selected_round)">Round List</button>
+          <button :class="{selected:showing==='rounds'}" @click.prevent="showRounds(selected_round)">Round List</button>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="3">
+          <button :class="{selected:showing==='team'}" @click.prevent="showTeam()">Random Team</button>
+        </td>
+        <td colspan="2">
+          <button :class="{selected:showing==='countdown'}"  @click.prevent="countdown()" :disabled="showing!=='team'">Countdown</button>
         </td>
       </tr>
       <tr v-for="action of score_actions">
@@ -35,13 +43,14 @@
 </template>
 
 <script>
-  import {send, getQuiz, getQuizRounds, getQuizTeams, getQuizJokers, getQuizScores, putQuizScoreObj, dynamicSort, dynamicSortMulti} from '../qs-lib';
+  import {getAppState, setAppState, send, getQuiz, getQuizRounds, getQuizTeams, getQuizJokers, getQuizScores, putQuizScoreObj, dynamicSort, dynamicSortMulti} from '../qs-lib';
+  import shuffle from 'shuffle-array';
   export default {
     name: 'hello',
     data () {
       return {
         rounds:[],
-        showing_scores:false,
+        showing:"rounds",
         selected_round:null,
         scores:[],
         jokers:[],
@@ -58,13 +67,33 @@
       }
     },
     methods: {
+      showTeam(){
+        getAppState().then(({data:state})=>{
+          if (!state )state={};
+          if (!state.teamList) state.teamList=[];
+          if (state.teamList.length>0) return state;
+          return getQuizTeams(this.quiz_id).then(({data:{data:teams}})=>{
+            teams = shuffle(teams);
+            state.teamList=teams.map(t=>t.team_id);
+            return state;
+          })
+        }).then(state=>{
+          send({go:`/display/quizzes/${this.quiz_id}/teams/${state.teamList.pop()}`});
+          this.showing='team';
+          return setAppState(state);
+        })
+      },
+      countdown(){
+        this.showing='countdown';
+        send({countdown:10});
+      },
       selectRound(r_id){
         console.log(r_id);
         this.selected_round=r_id;
       },
       showScores(r_id){
         send({go:`/display/quizzes/${this.quiz_id}/rounds/${r_id}/scores/`}).then(()=>this.update());
-        this.showing_scores=true;
+        this.showing='scores';
         //make a list of scores sorted by total without this round
         const teams={};
         this.scores.forEach(s=>{
@@ -97,7 +126,7 @@
       },
       showRounds(r_id){
         send({go:`/display/quizzes/${this.quiz_id}/rounds/${r_id}/`}).then(()=>this.update());
-        this.showing_scores=false;
+        this.showing='rounds';
         this.score_actions=[];
       },
       setScores(scores){
