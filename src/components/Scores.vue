@@ -64,6 +64,7 @@
     },
     methods: {
       update(){
+	  	document.head.querySelector('title').innerHTML="Scores";
         this.quiz_id = parseInt(this.$route.params.quiz);
         Promise.all([
           getQuiz(this.quiz_id),
@@ -230,6 +231,7 @@
     position:fixed;
     bottom:1em;
     left:50%;
+	width:100%;
     transform:translate(-50%,0);
   }
   .nav{

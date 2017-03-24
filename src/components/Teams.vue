@@ -43,6 +43,7 @@
     },
     methods:{
       update(){
+  		document.head.querySelector('title').innerHTML="Teams";
         this.quiz_id = parseInt(this.$route.params.quiz);
         getQuiz(this.quiz_id).then(r=> {
           this.quiz = r.data.data;

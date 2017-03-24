@@ -55,6 +55,7 @@
     },
     methods: {
       update(){
+	  	document.head.querySelector('title').innerHTML="Display Quiz Rounds";
         this.quiz_id = parseInt(this.$route.params.quiz);
         this.round_id = parseInt(this.$route.params.round);
         Promise.all([

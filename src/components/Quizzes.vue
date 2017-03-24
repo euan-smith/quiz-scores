@@ -17,11 +17,11 @@
         <td><input v-model="quiz.quiz_date" @keyup.enter.prevent="modify(quiz.quiz_id)"> </td>
         <td><button @click.prevent="modify(quiz.quiz_id)">Modify</button></td>
         <td><button @click.prevent="remove(quiz.quiz_id)">Delete</button></td>
-        <td><a :href="`#/quizzes/${quiz.quiz_id}/rounds`">rounds</a></td>
-        <td><a :href="`#/quizzes/${quiz.quiz_id}/teams`">teams</a></td>
-        <td><a :href="`#/quizzes/${quiz.quiz_id}/rounds/1/scores`">scores</a></td>
-        <td><a :href="`#/quizzes/${quiz.quiz_id}/remote`">remote</a></td>
-        <td><a :href="`#/display/quizzes/${quiz.quiz_id}/rounds/1`">display</a></td>
+        <td><a :href="`#/quizzes/${quiz.quiz_id}/rounds`" target="_blank">rounds</a></td>
+        <td><a :href="`#/quizzes/${quiz.quiz_id}/teams`" target="_blank">teams</a></td>
+        <td><a :href="`#/quizzes/${quiz.quiz_id}/rounds/1/scores`" target="_blank">scores</a></td>
+        <td><a :href="`#/quizzes/${quiz.quiz_id}/remote`" target="_blank">remote</a></td>
+        <td><a :href="`#/display/quizzes/${quiz.quiz_id}/rounds/1`" target="_blank">display</a></td>
       </tr>
       <tr class="add-row">
         <td></td>
@@ -53,12 +53,14 @@
       this.update();
     },
     methods:{
-      update(){getQuizzes().then(r=>{
-        this.quizzes=r.data.data.map(q=>{
-          q.quiz_date=(new Date(q.quiz_date).toDateString());
-          return q;
-        }).sort((a,b)=>a.quiz_id-b.quiz_id);
-      })},
+      update(){
+		document.head.querySelector('title').innerHTML="Quizzes";
+		  getQuizzes().then(r=>{
+			this.quizzes=r.data.data.map(q=>{
+			  q.quiz_date=(new Date(q.quiz_date).toDateString());
+			  return q;
+			}).sort((a,b)=>a.quiz_id-b.quiz_id);
+		  })},
       add(){return createQuiz(this.newTitle, this.newDate, this.newDesc).then(()=>this.update())},
       remove(id){return deleteQuiz(id).then(()=>this.update())},
       modify(id){

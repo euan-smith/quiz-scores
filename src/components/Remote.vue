@@ -182,6 +182,7 @@
             .then(()=>this.update());
       },
       update(){
+	  	document.head.querySelector('title').innerHTML="Remote Control";
         this.quiz_id = parseInt(this.$route.params.quiz);
         Promise.all([
           getQuiz(this.quiz_id),

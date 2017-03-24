@@ -70,6 +70,7 @@
         this.timer=null;
       },
       update(){
+	  	document.head.querySelector('title').innerHTML="Pick a Team";
         if (this.calling) return;
         this.calling=true;
         this.quiz_id = parseInt(this.$route.params.quiz);

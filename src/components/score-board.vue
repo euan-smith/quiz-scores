@@ -52,6 +52,7 @@
     },
     methods:{
       update(){
+	  	document.head.querySelector('title').innerHTML="Display Scoreboard";
         if (this.calling) return;
         this.calling=true;
         this.quiz_id = parseInt(this.$route.params.quiz);
